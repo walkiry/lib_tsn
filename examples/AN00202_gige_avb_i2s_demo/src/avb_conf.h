@@ -4,6 +4,8 @@
 
 /******** Endpoint audio and clocking parameters ************************************************/
 
+#define AEM_GENERATE_DESCRIPTORS_ON_FLY 0
+
 /* Talker configuration */
 
 /** The total number of AVB sources (streams that are to be transmitted). */
