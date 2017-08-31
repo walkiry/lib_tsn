@@ -37,7 +37,7 @@ typedef struct media_info_t {
 static int max_talker_stream_id = 0;
 static int max_listener_stream_id = 0;
 static avb_source_info_t sources[AVB_NUM_SOURCES];
-static avb_sink_info_t sinks[AVB_NUM_SINKS];
+static avb_sink_info_t sinks[AVB_NUM_SINKS+1]; //+1 CRF Stream
 static media_info_t inputs[AVB_NUM_MEDIA_INPUTS];
 static media_info_t outputs[AVB_NUM_MEDIA_OUTPUTS];
 
@@ -166,7 +166,7 @@ void avb_init(chanend c_media_ctl[],
 static int valid_to_leave_vlan(int vlan)
 {
   int all_streams_disabled = 1;
-  for (int i=0; i < AVB_NUM_SINKS; i++) {
+  for (int i=0; i < AVB_NUM_SINKS+1; i++) {//+1 CRF Stream
     if (sinks[i].stream.state != AVB_SINK_STATE_DISABLED) {
       all_streams_disabled = 0;
       break;
@@ -709,7 +709,7 @@ unsigned avb_get_source_stream_index_from_stream_id(unsigned int stream_id[2])
 
 unsigned avb_get_sink_stream_index_from_stream_id(unsigned int stream_id[2])
 {
-  for (unsigned i=0; i<AVB_NUM_SINKS; ++i) {
+  for (unsigned i=0; i<AVB_NUM_SINKS+1; ++i) {//+1 CRF Stream
     if (stream_id[0] == sinks[i].reservation.stream_id[0] &&
         stream_id[1] == sinks[i].reservation.stream_id[1]) {
       return i;
@@ -728,7 +728,7 @@ unsigned avb_get_source_stream_index_from_pointer(avb_source_info_t *unsafe p)
 
 unsigned avb_get_sink_stream_index_from_pointer(avb_sink_info_t *unsafe p)
 {
-	for (unsigned i=0; i<AVB_NUM_SINKS; ++i) {
+	for (unsigned i=0; i<AVB_NUM_SINKS+1; ++i) {//+1 CRF Stream
 		if (p == &sinks[i]) return i;
 	}
 	return -1u;

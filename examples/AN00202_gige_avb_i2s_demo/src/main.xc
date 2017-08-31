@@ -483,7 +483,7 @@ int main(void)
                                   c_buf_ctl[0],
                                   null,
                                   c_listener_ctl[0],
-                                  AVB_NUM_SINKS,
+                                  2, /* 1 Audio + 1 CRF*/
                                   i_audio_out_push);
 
     on tile[0]: {

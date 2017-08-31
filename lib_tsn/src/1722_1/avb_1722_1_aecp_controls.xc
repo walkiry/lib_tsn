@@ -201,7 +201,7 @@ unsafe void process_aem_cmd_getset_stream_format(avb_1722_1_aecp_packet_t *unsaf
   avb_source_info_t source;
   avb_stream_info_t *unsafe stream;
 
-  if ((desc_type == AEM_STREAM_INPUT_TYPE) && (stream_index < AVB_NUM_SINKS))
+  if ((desc_type == AEM_STREAM_INPUT_TYPE) && (stream_index < AVB_NUM_SINKS+1)) //+1 CRF Stream
   {
     sink = i_avb._get_sink_info(stream_index);
     stream = &sink.stream;
@@ -262,7 +262,7 @@ unsafe void process_aem_cmd_getset_stream_info(avb_1722_1_aecp_packet_t *unsafe 
   avb_sink_info_t sink;
   avb_source_info_t source;
 
-  if ((desc_type == AEM_STREAM_INPUT_TYPE) && (stream_index < AVB_NUM_SINKS))
+  if ((desc_type == AEM_STREAM_INPUT_TYPE) && (stream_index < AVB_NUM_SINKS+1)) //+1 CRF Stream
   {
     sink = i_avb._get_sink_info(stream_index);
     reservation = &sink.reservation;

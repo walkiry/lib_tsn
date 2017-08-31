@@ -16,7 +16,7 @@
 #include "audio_buffering.h"
 
 #ifndef MAX_INCOMING_AVB_STREAMS
-#define MAX_INCOMING_AVB_STREAMS (AVB_NUM_SINKS)
+#define MAX_INCOMING_AVB_STREAMS (AVB_NUM_SINKS+1) //+1 CRF Stream
 #endif
 
 #ifndef AVB_MAX_CHANNELS_PER_LISTENER_STREAM

@@ -24,9 +24,9 @@
 */
 #ifndef AVB_STREAM_TABLE_ENTRIES
 #if MRP_NUM_PORTS == 1
-   #define AVB_STREAM_TABLE_ENTRIES (AVB_NUM_SOURCES+AVB_NUM_SINKS+4)
+   #define AVB_STREAM_TABLE_ENTRIES (AVB_NUM_SOURCES+AVB_NUM_SINKS+1+4)//+1 CRF Stream
 #else
-  #define AVB_STREAM_TABLE_ENTRIES (8+AVB_NUM_SOURCES+AVB_NUM_SINKS+4)
+  #define AVB_STREAM_TABLE_ENTRIES (8+AVB_NUM_SOURCES+AVB_NUM_SINKS+1+4)//+1 CRF Stream
 #endif
 #endif
 
@@ -959,7 +959,7 @@ void avb_srp_domain_join_ind(CLIENT_INTERFACE(avb_interface, avb), mrp_attribute
     }
   }
 
-  for (int i=0; i < AVB_NUM_SINKS; i++)
+  for (int i=0; i < AVB_NUM_SINKS+1; i++)//+1 CRF Stream
   {
     int current_set_vlan;
     avb_get_sink_vlan(avb, i, &current_set_vlan);
