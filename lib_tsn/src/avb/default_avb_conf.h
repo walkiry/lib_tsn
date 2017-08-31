@@ -63,7 +63,7 @@
 #endif
 
 #ifndef AVB_ENABLE_1722_1
-#define AVB_ENABLE_1722_1 0
+#define AVB_ENABLE_1722_1 1
 #endif
 
 #ifndef AVB_ENABLE_1722_MAAP

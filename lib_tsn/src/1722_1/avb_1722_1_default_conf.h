@@ -5,8 +5,12 @@
 /* Must include avb_conf.h as it may redefine the default defines here */
 #include "default_avb_conf.h"
 
-#ifndef AEM_GENERATE_DESCRIPTORS_ON_FLY
-#define AEM_GENERATE_DESCRIPTORS_ON_FLY 1
+//#ifndef AEM_GENERATE_DESCRIPTORS_ON_FLY
+//#define AEM_GENERATE_DESCRIPTORS_ON_FLY 1
+//#endif
+
+#ifndef AVB_1722_1_AEM_ENABLED
+#define AVB_1722_1_AEM_ENABLED 1
 #endif
 
 #if AVB_ENABLE_1722_1

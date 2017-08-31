@@ -5,6 +5,8 @@
 /******** Endpoint audio and clocking parameters ************************************************/
 
 #define AEM_GENERATE_DESCRIPTORS_ON_FLY 0
+#define AVB_1722_1_AEM_ENABLED 1
+#define AVB_ENABLE_1722_1 1
 
 /* Talker configuration */
 
