@@ -51,6 +51,14 @@ int avb_1722_listener_process_packet(chanend? buf_ctl,
                                      int index,
                                      REFERENCE_PARAM(int, notified_buf_ctl),
                                      buffer_handle_t h);
+int avb_1722_listener_process_crf_packet(chanend? buf_ctl,
+                                     unsigned char Buf[],
+                                     int numBytes,
+                                     REFERENCE_PARAM(avb_1722_stream_info_t, stream_info),
+                                     NULLABLE_REFERENCE_PARAM(ptp_time_info_mod64, timeInfo),
+                                     int index,
+                                     REFERENCE_PARAM(int, notified_buf_ctl),
+                                     buffer_handle_t h);
 #else
 int avb_1722_listener_process_packet(chanend buf_ctl,
                                      unsigned char Buf[],

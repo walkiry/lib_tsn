@@ -32,14 +32,17 @@ static transaction configure_stream(chanend c,
 	c :> s.rate;
 	c :> s.num_channels;
 
-	for(int i=0;i<s.num_channels;i++) {
-		c :> s.map[i];
-		if (s.map[i] >= 0)
-		{
-      unsafe {
-        enable_audio_output_fifo(h, s.map[i], media_clock);
-      }
-		}
+	//if (s.num_channels > 0)
+	{
+        for(int i=0;i<s.num_channels;i++) {
+            c :> s.map[i];
+            if (s.map[i] >= 0)
+            {
+              unsafe {
+                enable_audio_output_fifo(h, s.map[i], media_clock);
+              }
+            }
+        }
 	}
 
 	s.active = 1;
@@ -62,12 +65,15 @@ static transaction adjust_stream(chanend c,
     int new_map[AVB_MAX_CHANNELS_PER_LISTENER_STREAM];
     int media_clock;
     c :> media_clock;
-    for(int i=0;i<s.num_channels;i++) {
-      c :> new_map[i];
-      if (new_map[i] != s.map[i])
-      {
-        s.map[i] = new_map[i];
-      }
+    //if(s.num_channels > 0)
+    {
+        for(int i=0;i<s.num_channels;i++) {
+          c :> new_map[i];
+          if (new_map[i] != s.map[i])
+          {
+            s.map[i] = new_map[i];
+          }
+        }
     }
     break;
   }
@@ -90,14 +96,17 @@ static transaction adjust_stream(chanend c,
 static void disable_stream(avb_1722_stream_info_t &s,
                            buffer_handle_t h)
 {
-	for(int i=0;i<s.num_channels;i++) {
-		if (s.map[i] >= 0)
-		{
-      unsafe {
-        disable_audio_output_fifo(h, s.map[i]);
-      }
-		}
-	}
+    //if(s.num_channels > 0)
+    {
+        for(int i=0;i<s.num_channels;i++) {
+            if (s.map[i] >= 0)
+            {
+          unsafe {
+            disable_audio_output_fifo(h, s.map[i]);
+          }
+            }
+        }
+    }
 
 	s.active = 0;
 	s.state = 0;
@@ -136,15 +145,29 @@ void avb_1722_listener_handle_packet(unsigned int rxbuf[],
   // process the audio packet if enabled.
   if (stream_id < MAX_AVB_STREAMS_PER_LISTENER &&
       st.listener_streams[stream_id].active) {
-    // process the current packet
-    avb_1722_listener_process_packet(c_buf_ctl,
-                                     &(rxbuf, unsigned char[])[2],
-                                     packet_info.len,
-                                     st.listener_streams[stream_id],
-                                     timeInfo,
-                                     stream_id,
-                                     st.notified_buf_ctl,
-                                     h);
+
+      //TODO figure out which stream_ids match which format!
+      if (stream_id == 0) {
+        // process the current audio packet
+        avb_1722_listener_process_packet(c_buf_ctl,
+                                         &(rxbuf, unsigned char[])[2],
+                                         packet_info.len,
+                                         st.listener_streams[stream_id],
+                                         timeInfo,
+                                         stream_id,
+                                         st.notified_buf_ctl,
+                                         h);
+      } else if (stream_id == 1) {
+          // process the current crf packet
+        avb_1722_listener_process_crf_packet(c_buf_ctl,
+                                             &(rxbuf, unsigned char[])[2],
+                                             packet_info.len,
+                                             st.listener_streams[stream_id],
+                                             timeInfo,
+                                             stream_id,
+                                             st.notified_buf_ctl,
+                                             h);
+      }
     st.counters.received_1722++;
   }
 }

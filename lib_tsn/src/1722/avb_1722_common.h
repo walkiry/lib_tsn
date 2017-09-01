@@ -89,6 +89,7 @@ typedef struct
 #define CLEAR_AVBTP_VID(x)   do{ x->flagVID[0] &= 0xF0; \
                                   x->flagVID[1] = 0; } while (0)
 
+// TODO Clean up common header and protocol specific headers!
 // AVB common stream data header format
 typedef struct
 {
@@ -116,7 +117,6 @@ typedef struct
   //                               // bit 4-7 : sy (application specific
 
 } AVB_DataHeader_t;
-
 
 // Macros to access the AVB Common Header.
 // Usage:
@@ -181,4 +181,40 @@ typedef struct
 
 // Number of transport stream packets to allow in each 61883-4 encapsulation
 #define MAX_TS_PACKETS_PER_1722 4
+
+/*
+ * CRF
+ */
+
+// AVB common stream data header format
+typedef struct
+{
+  unsigned char subtype;          // bit 0-7 : subtype
+  unsigned char version_flags;    // bit 0   : sv. stream id field valid.
+                                  // bit 1-3 : version.
+                                  // bit 4   : mr. media clock restart.
+                                  // bit 5   : r. Reserved
+                                  // bit 6   : fs
+                                  // bit 7   : tu. timestamp uncertain.
+  unsigned char sequence_number;  //
+  unsigned char type;             //
+  unsigned char stream_id[8];     // 802.1Qat Stream ID
+  unsigned char pull_basefrequency[4]; //
+  unsigned char packet_data_length[2];  // length of data following the protocol specific packet header.
+                                        // Max value 1476
+  unsigned char timestamp_interval[2];
+  //For CRF
+  unsigned char crf_timestamp[8];     // CRF Timestamp
+
+} AVB_CrfHeader_t;
+
+#define CRF_TIMESTAMP_HI(x)          ((x->crf_timestamp[0] << 24) | \
+                                     (x->crf_timestamp[1] << 16) | \
+                                     (x->crf_timestamp[2] << 8) | \
+                                     (x->crf_timestamp[3]))
+
+#define CRF_TIMESTAMP_LO(x)          ((x->crf_timestamp[4] << 24) | \
+                                     (x->crf_timestamp[5] << 16) | \
+                                     (x->crf_timestamp[6] << 8) | \
+                                     (x->crf_timestamp[7]))
 #endif
