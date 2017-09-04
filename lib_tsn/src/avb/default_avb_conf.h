@@ -78,4 +78,8 @@
 #define FLASH_PAGE_SIZE (256)
 #endif
 
+#ifndef AVB_1722_FORMAT_CRF
+#define AVB_1722_FORMAT_CRF 1
+#endif
+
 #endif // __default_avb_conf_h__

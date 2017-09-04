@@ -363,7 +363,8 @@ static void update_source_state(unsigned source_num,
       }
 
       // check that the map is ok
-      for (int i=0;i<source->stream.num_channels;i++) {
+      for (int i=0;i<source->stream.num_channels;i++)
+      {
         if (inputs[source->map[i]].mapped_to != UNMAPPED) {
           valid = 0;
         }
@@ -605,7 +606,7 @@ int set_avb_source_port(unsigned source_num,
 #ifdef MEDIA_OUTPUT_FIFO_VOLUME_CONTROL
 void set_avb_source_volumes(unsigned sink_num, int volumes[], int count)
 {
-	if (sink_num < AVB_NUM_SINKS) {
+	if (sink_num < AVB_NUM_SINKS+1) { //+1 CRF Stream
     unsafe {
       avb_sink_info_t *sink = &sinks[sink_num];
       chanend *unsafe c = sink->listener_ctl;

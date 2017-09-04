@@ -28,7 +28,7 @@
   * (typically the number of tasks running the `avb_1722_listener` function) */
 #define AVB_NUM_LISTENER_UNITS 1
 /** The total number of media outputs (typically the number of I2S output channels). */
-#define AVB_NUM_MEDIA_OUTPUTS 8
+#define AVB_NUM_MEDIA_OUTPUTS 16 //+8 channels for 1 CRF Stream
 /** Enable the 1722.1 Listener functionality */
 #define AVB_1722_1_LISTENER_ENABLED 1
 

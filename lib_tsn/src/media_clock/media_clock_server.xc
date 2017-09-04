@@ -142,6 +142,9 @@ static void manage_buffer(buf_info_t &b,
     buf_ctl :> wrptr;
     buf_ctl :> server_tile_id;
   }
+
+  debug_printf("media clock server %d %d\n", presentation_timestamp, outgoing_timestamp_local);
+
   if (server_tile_id != get_local_tile_id())
   {
 	  outgoing_timestamp_local = outgoing_timestamp_local - (othercore_now - thiscore_now);

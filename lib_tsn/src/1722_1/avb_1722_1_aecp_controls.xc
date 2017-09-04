@@ -231,7 +231,7 @@ unsafe void process_aem_cmd_getset_stream_format(avb_1722_1_aecp_packet_t *unsaf
     }
     if (stream_index == 1) {
         format = AVB_FORMAT_CRF;
-        rate = sampling_rate_from_sfc(cmd->stream_format[2]); //TODO fix for crf
+        rate = 48000; //TODO fix for crf
         channels = 1; // For CRF we use one empty channel in the audio buffer!
     }
 
@@ -355,6 +355,7 @@ unsafe void process_aem_cmd_getset_sampling_rate(avb_1722_1_aecp_packet_t *unsaf
     }
     else {
       status = AECP_AEM_STATUS_NO_SUCH_DESCRIPTOR;
+      debug_printf("AECP_AEM_CMD_GET_SAMPLING_RATE -> AECP_AEM_STATUS_NO_SUCH_DESCRIPTOR\n");
     }
   }
   else // AECP_AEM_CMD_SET_SAMPLING_RATE
@@ -369,6 +370,7 @@ unsafe void process_aem_cmd_getset_sampling_rate(avb_1722_1_aecp_packet_t *unsaf
     }
     else {
       status = AECP_AEM_STATUS_NO_SUCH_DESCRIPTOR;
+      debug_printf("AECP_AEM_CMD_SET_SAMPLING_RATE -> AECP_AEM_STATUS_NO_SUCH_DESCRIPTOR\n");
     }
   }
   return;
@@ -386,7 +388,8 @@ unsafe void process_aem_cmd_getset_clock_source(avb_1722_1_aecp_packet_t *unsafe
 
   if (command_type == AECP_AEM_CMD_GET_CLOCK_SOURCE)
   {
-    if (avb.get_device_media_clock_type(media_clock_id, source_index))
+    //if (avb.get_device_media_clock_type(media_clock_id, source_index))
+    if (avb.set_device_media_clock_source(media_clock_id, source_index))
     {
       hton_16(cmd->clock_source_index, source_index);
     }
@@ -398,8 +401,14 @@ unsafe void process_aem_cmd_getset_clock_source(avb_1722_1_aecp_packet_t *unsafe
   {
     source_index = ntoh_16(cmd->clock_source_index);
 
+    // TODO clean up
     avb.set_device_media_clock_state(media_clock_id, DEVICE_MEDIA_CLOCK_STATE_DISABLED);
-    if (avb.set_device_media_clock_type(media_clock_id, source_index))
+    avb.set_device_media_clock_source(media_clock_id, source_index);
+    // TODO calculate media clock type properly
+    enum device_media_clock_type_t type;
+    if(source_index == 0 || source_index == 2) type = DEVICE_MEDIA_CLOCK_INPUT_STREAM_DERIVED;
+    else type = DEVICE_MEDIA_CLOCK_LOCAL_CLOCK;
+    if (avb.set_device_media_clock_type(media_clock_id, type))
     {
       avb.set_device_media_clock_state(media_clock_id, DEVICE_MEDIA_CLOCK_STATE_ENABLED);
       // Success

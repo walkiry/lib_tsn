@@ -45,6 +45,7 @@ static inline void hton_32_inline(unsigned char x[4], unsigned int v) {
 // Frame Header size in bytes definations.
 #define AVB_ETHERNET_HDR_SIZE    (18)
 #define AVB_TP_HDR_SIZE          (24)
+#define AVB_CRF_HDR_SIZE          (28)
 
 // number of bytes in MAC address
 #define MAC_ADRS_BYTE_COUNT      (6)
@@ -204,9 +205,11 @@ typedef struct
                                         // Max value 1476
   unsigned char timestamp_interval[2];
   //For CRF
-  unsigned char crf_timestamp[8];     // CRF Timestamp
+  unsigned char crf_timestamp[8];     // CRF Timestamp - we use just the first timestamp
 
 } AVB_CrfHeader_t;
+
+#define CRF_VERSION(x)               ((x->version_flags >> 4) & 0x7)
 
 #define CRF_TIMESTAMP_HI(x)          ((x->crf_timestamp[0] << 24) | \
                                      (x->crf_timestamp[1] << 16) | \

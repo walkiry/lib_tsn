@@ -41,7 +41,6 @@ typedef struct avb_1722_stream_info_t {
   audio_output_fifo_t map[AVB_MAX_CHANNELS_PER_LISTENER_STREAM];
 } avb_1722_stream_info_t;
 
-
 #ifdef __XC__
 int avb_1722_listener_process_packet(chanend? buf_ctl,
                                      unsigned char Buf[],

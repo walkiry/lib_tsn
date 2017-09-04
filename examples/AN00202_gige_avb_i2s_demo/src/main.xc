@@ -456,7 +456,7 @@ int main(void)
       configure_clock_src(clk_i2s_mclk, p_i2s_mclk);
       start_clock(clk_i2s_mclk);
       i2s_master(i_i2s,
-                 p_aud_dout, AVB_NUM_MEDIA_OUTPUTS/2,
+                 p_aud_dout, AVB_NUM_MEDIA_OUTPUTS/2/2, // /2 discards crf's empty channels
                  p_aud_din, AVB_NUM_MEDIA_INPUTS/2,
                  p_i2s_bclk,
                  p_i2s_lrclk,
@@ -526,10 +526,14 @@ void application_task(client interface avb_interface avb,
   unsigned char aem_identify_control_value = 0;
 
   // Initialize the media clock
+  // TODO Set Format etc according to the entity model!
+  /*
   avb.set_device_media_clock_type(0, DEVICE_MEDIA_CLOCK_INPUT_STREAM_DERIVED);
   avb.set_device_media_clock_rate(0, default_sample_rate);
   avb.set_device_media_clock_state(0, DEVICE_MEDIA_CLOCK_STATE_ENABLED);
+  */
 
+  // TODO Set Format etc according to the entity model!
   for (int j=0; j < AVB_NUM_SOURCES; j++)
   {
     const int channels_per_stream = AVB_NUM_MEDIA_INPUTS/AVB_NUM_SOURCES;
@@ -541,15 +545,28 @@ void application_task(client interface avb_interface avb,
     avb.set_source_channels(j, channels_per_stream);
   }
 
+  // TODO Set default Format etc according to the entity model!
   for (int j=0; j < AVB_NUM_SINKS; j++)
   {
-    const int channels_per_stream = AVB_NUM_MEDIA_OUTPUTS/AVB_NUM_SINKS;
-    int map[AVB_NUM_MEDIA_OUTPUTS/AVB_NUM_SINKS];
-    for (int i = 0; i < channels_per_stream; i++) map[i] = j ? j*channels_per_stream+i : j+i;
-    avb.set_sink_map(j, map, channels_per_stream);
-    avb.set_sink_format(j, AVB_FORMAT_MBLA_24BIT, default_sample_rate);
-    avb.set_sink_sync(j, 0);
-    avb.set_sink_channels(j, channels_per_stream);
+      const int channels_per_stream = 8;
+      int map[AVB_NUM_MEDIA_OUTPUTS/AVB_NUM_SINKS];
+      for (int i = 0; i < channels_per_stream; i++) map[i] = j ? j*channels_per_stream+i : j+i;
+      avb.set_sink_map(j, map, channels_per_stream);
+      avb.set_sink_format(j, AVB_FORMAT_CRF, default_sample_rate);
+      avb.set_sink_sync(j, 0);
+      avb.set_sink_channels(j, channels_per_stream);
+  }
+
+  // TODO Set default Format etc according to the entity model!
+  for (int j=AVB_NUM_SINKS; j < AVB_NUM_SINKS+1; j++) // +1 CRF Streams
+  {
+      const int channels_per_stream = 1;
+      int map[1];
+      for (int i = 0; i < channels_per_stream; i++) map[i] = j ? j*channels_per_stream+i : j+i;
+      avb.set_sink_map(j, map, channels_per_stream);
+      avb.set_sink_format(j, AVB_FORMAT_CRF, default_sample_rate);
+      avb.set_sink_sync(j, 0);
+      avb.set_sink_channels(j, channels_per_stream);
   }
 
   while (1)
