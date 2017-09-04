@@ -147,7 +147,7 @@ void avb_1722_listener_handle_packet(unsigned int rxbuf[],
       st.listener_streams[stream_id].active) {
 
       //TODO figure out which stream_ids match which format!
-      if (stream_id == 0) {
+      if (stream_id == 0) { // st.listener_streams[].type is what we should use here!
         // process the current audio packet
         avb_1722_listener_process_packet(c_buf_ctl,
                                          &(rxbuf, unsigned char[])[2],
@@ -158,8 +158,10 @@ void avb_1722_listener_handle_packet(unsigned int rxbuf[],
                                          st.notified_buf_ctl,
                                          h);
       } else if (stream_id == 1) {
+          // Hack to have a proper map for CRF Stream
+          st.listener_streams[stream_id].map[0]=0;
           // process the current crf packet
-        avb_1722_listener_process_crf_packet(c_buf_ctl,
+          avb_1722_listener_process_crf_packet(c_buf_ctl,
                                              &(rxbuf, unsigned char[])[2],
                                              packet_info.len,
                                              st.listener_streams[stream_id],
