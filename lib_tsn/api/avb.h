@@ -17,6 +17,7 @@
 enum avb_stream_format_t
 {
   AVB_FORMAT_MBLA_24BIT, /*!< 24bit MBLA */
+  AVB_FORMAT_CRF, /*!< CRF */
 };
 
 
@@ -605,7 +606,7 @@ extends client interface avb_interface : {
   static inline int get_sink_channels(client interface avb_interface i, unsigned sink_num,
                         int &channels)
   {
-    if (sink_num >= AVB_NUM_SINKS) // CRF has no channels
+    if (sink_num >= AVB_NUM_SINKS+1)// +1 CRF Stream - but CRF has no channels
       return 0;
     avb_sink_info_t sink;
     sink = i._get_sink_info(sink_num);
@@ -627,7 +628,7 @@ extends client interface avb_interface : {
   static inline int set_sink_channels(client interface avb_interface i, unsigned sink_num,
                         int channels)
   {
-    if (sink_num >= AVB_NUM_SINKS) // CRF has no channels
+    if (sink_num >= AVB_NUM_SINKS+1)// +1 CRF Stream - but CRF has no channels
       return 0;
     avb_sink_info_t sink;
     sink = i._get_sink_info(sink_num);
@@ -817,7 +818,7 @@ extends client interface avb_interface : {
   static inline int get_sink_map(client interface avb_interface i, unsigned sink_num,
                    int map[], int &len)
   {
-    if (sink_num >= AVB_NUM_SINKS)//no media output in crf
+    if (sink_num >= AVB_NUM_SINKS+1)// +1 CRF Stream - but CRF has no channels
       return 0;
     avb_sink_info_t sink;
     sink = i._get_sink_info(sink_num);
@@ -842,7 +843,7 @@ extends client interface avb_interface : {
   static inline int set_sink_map(client interface avb_interface i, unsigned sink_num,
                    int map[len], unsigned len)
   {
-    if (sink_num >= AVB_NUM_SINKS)//no media output in crf
+    if (sink_num >= AVB_NUM_SINKS+1)// +1 CRF Stream - but CRF has no channels
       return 0;
     avb_sink_info_t sink;
     sink = i._get_sink_info(sink_num);
