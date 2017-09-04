@@ -223,9 +223,17 @@ unsafe void process_aem_cmd_getset_stream_format(avb_1722_1_aecp_packet_t *unsaf
   }
   else // AECP_AEM_CMD_SET_STREAM_FORMAT
   {
-    format = AVB_FORMAT_MBLA_24BIT;
-    rate = sampling_rate_from_sfc(cmd->stream_format[2]);
-    channels = cmd->stream_format[6];
+      // Hack uses fixed stream index. We should get this information from the 1722.1 packet!
+    if (stream_index == 0) {
+        format = AVB_FORMAT_MBLA_24BIT;
+        rate = sampling_rate_from_sfc(cmd->stream_format[2]);
+        channels = cmd->stream_format[6];
+    }
+    if (stream_index == 1) {
+        format = AVB_FORMAT_CRF;
+        rate = sampling_rate_from_sfc(cmd->stream_format[2]); //TODO fix for crf
+        channels = 1; // For CRF we use one empty channel in the audio buffer!
+    }
 
     if (stream->state == AVB_SOURCE_STATE_ENABLED)
     {
@@ -233,7 +241,7 @@ unsafe void process_aem_cmd_getset_stream_format(avb_1722_1_aecp_packet_t *unsaf
       return;
     }
 
-    stream->num_channels = channels;
+    stream->num_channels = channels; //channels;
     stream->rate = rate;
     stream->format = format;
 
