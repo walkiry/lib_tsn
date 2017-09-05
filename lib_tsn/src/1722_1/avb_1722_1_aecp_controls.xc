@@ -384,12 +384,13 @@ unsafe void process_aem_cmd_getset_clock_source(avb_1722_1_aecp_packet_t *unsafe
   avb_1722_1_aem_getset_clock_source_t *cmd = (avb_1722_1_aem_getset_clock_source_t *)(pkt->data.aem.command.payload);
   unsigned short media_clock_id = ntoh_16(cmd->descriptor_id);
   // The clock source descriptor's index corresponds to the clock type in our implementation
-  enum device_media_clock_type_t source_index;
+  enum device_media_clock_type_t clock_type;
+  int source_index;
 
   if (command_type == AECP_AEM_CMD_GET_CLOCK_SOURCE)
   {
-    //if (avb.get_device_media_clock_type(media_clock_id, source_index))
-    if (avb.set_device_media_clock_source(media_clock_id, source_index))
+    //if (avb.get_device_media_clock_type(media_clock_id, clock_type))
+    if (avb.get_device_media_clock_source(media_clock_id, source_index))
     {
       hton_16(cmd->clock_source_index, source_index);
     }
@@ -405,10 +406,9 @@ unsafe void process_aem_cmd_getset_clock_source(avb_1722_1_aecp_packet_t *unsafe
     avb.set_device_media_clock_state(media_clock_id, DEVICE_MEDIA_CLOCK_STATE_DISABLED);
     avb.set_device_media_clock_source(media_clock_id, source_index);
     // TODO calculate media clock type properly
-    enum device_media_clock_type_t type;
-    if(source_index == 0 || source_index == 2) type = DEVICE_MEDIA_CLOCK_INPUT_STREAM_DERIVED;
-    else type = DEVICE_MEDIA_CLOCK_LOCAL_CLOCK;
-    if (avb.set_device_media_clock_type(media_clock_id, type))
+    if(source_index == 0 || source_index == 2) clock_type = DEVICE_MEDIA_CLOCK_INPUT_STREAM_DERIVED;
+    else clock_type = DEVICE_MEDIA_CLOCK_LOCAL_CLOCK;
+    if (avb.set_device_media_clock_type(media_clock_id, clock_type))
     {
       avb.set_device_media_clock_state(media_clock_id, DEVICE_MEDIA_CLOCK_STATE_ENABLED);
       // Success

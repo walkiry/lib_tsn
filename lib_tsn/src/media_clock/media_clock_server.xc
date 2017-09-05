@@ -84,7 +84,7 @@ void inform_media_clocks_of_lock(int source_num)
 }
 
 #if (AVB_NUM_MEDIA_OUTPUTS != 0)
-static buf_info_t buf_info[AVB_NUM_MEDIA_OUTPUTS];
+static buf_info_t buf_info[AVB_NUM_MEDIA_OUTPUTS+1]; // +1 for CRF
 
 
 
@@ -96,7 +96,7 @@ static void init_buffers(void)
 int get_buf_info(int fifo)
 {
   int stream_num = -1;
-  for (int i=0;i<AVB_NUM_MEDIA_OUTPUTS;i++)
+  for (int i=0;i<AVB_NUM_MEDIA_OUTPUTS+1;i++) // +1 for CRF
     if (buf_info[i].fifo == fifo)
       stream_num = i;
 
@@ -356,7 +356,7 @@ void gptp_media_clock_server(server interface media_clock_if media_clock_ctl,
   unsigned char buf_ctl_cmd;
 #endif
   timer clk_timers[AVB_NUM_MEDIA_CLOCKS];
-  unsigned fifo_init_count = AVB_NUM_MEDIA_OUTPUTS;
+  unsigned fifo_init_count = AVB_NUM_MEDIA_OUTPUTS+1; // +1 for CRF
 
 
 #if COMBINE_MEDIA_CLOCK_AND_PTP

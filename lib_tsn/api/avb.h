@@ -965,7 +965,7 @@ extends client interface avb_interface : {
     media_clock_info_t info;
     info = i._get_media_clock_info(clock_num);
     info.source = source;
-    debug_printf("set_device_media_clock_source = %d\n", source);
+    debug_printf("set_device_media_clock_source = %d clock_num %d\n", source, clock_num);
     i._set_media_clock_info(clock_num, info);
     return 1;
   }
@@ -1005,10 +1005,12 @@ extends client interface avb_interface : {
     media_clock_info_t info;
     info = i._get_media_clock_info(clock_num);
     info.clock_type = clock_type;
-    debug_printf("Setting clock source:");
+
     // TODO Get Strings from Entity model
+    debug_printf("Setting clock type: ");
     if (info.clock_type) debug_printf("Local Clock\n");
     else debug_printf("Stream\n");
+
     i._set_media_clock_info(clock_num, info);
     return 1;
   }
