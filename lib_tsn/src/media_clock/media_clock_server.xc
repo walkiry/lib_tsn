@@ -96,9 +96,11 @@ static void init_buffers(void)
 int get_buf_info(int fifo)
 {
   int stream_num = -1;
-  for (int i=0;i<AVB_NUM_MEDIA_OUTPUTS+1;i++) // +1 for CRF
+  for (int i=0;i<AVB_NUM_MEDIA_OUTPUTS+1;i++) {// +1 for CRF
+    //debug_printf("%d %d %d\n", i, buf_info[i].fifo, fifo);
     if (buf_info[i].fifo == fifo)
       stream_num = i;
+  }
 
   return stream_num;
 }
@@ -143,7 +145,7 @@ static void manage_buffer(buf_info_t &b,
     buf_ctl :> server_tile_id;
   }
 
-  debug_printf("media clock server %d %d\n", presentation_timestamp, outgoing_timestamp_local);
+  debug_printf("media clock server %d %d %d\n", presentation_timestamp, outgoing_timestamp_local, index);
 
   if (server_tile_id != get_local_tile_id())
   {
@@ -440,6 +442,7 @@ void gptp_media_clock_server(server interface media_clock_if media_clock_ctl,
 #endif
           (void) inct(buf_ctl[i]);
           buf_index = get_buf_info(fifo);
+          //debug_printf("get_buf_info buf_index %d fifo %d\n", buf_index, fifo);
           switch (buf_ctl_cmd)
             {
             case BUF_CTL_GOT_INFO:
@@ -464,6 +467,7 @@ void gptp_media_clock_server(server interface media_clock_if media_clock_ctl,
 
       case media_clock_ctl.set_buf_fifo(unsigned i, int fifo):
         buf_info[i].fifo = fifo;
+        debug_printf("set_buf_fifo i %d, fifo %d\n", i, fifo);
         fifo_init_count--;
         break;
       case media_clock_ctl.register_clock(unsigned i, unsigned clock_num):

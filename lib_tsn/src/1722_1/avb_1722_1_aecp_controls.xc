@@ -406,7 +406,7 @@ unsafe void process_aem_cmd_getset_clock_source(avb_1722_1_aecp_packet_t *unsafe
     avb.set_device_media_clock_state(media_clock_id, DEVICE_MEDIA_CLOCK_STATE_DISABLED);
     avb.set_device_media_clock_source(media_clock_id, source_index);
     // TODO calculate media clock type properly
-    if(source_index == 0 || source_index == 2) clock_type = DEVICE_MEDIA_CLOCK_INPUT_STREAM_DERIVED;
+    if(source_index < 2) clock_type = DEVICE_MEDIA_CLOCK_INPUT_STREAM_DERIVED;
     else clock_type = DEVICE_MEDIA_CLOCK_LOCAL_CLOCK;
     if (avb.set_device_media_clock_type(media_clock_id, clock_type))
     {

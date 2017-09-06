@@ -5,6 +5,7 @@
 #include "audio_output_fifo.h"
 #include "avb_1722_def.h"
 #include "media_clock_client.h"
+#include "debug_print.h"
 
 #define OUTPUT_DURING_LOCK 0
 #define NOTIFICATION_PERIOD 250
@@ -92,6 +93,8 @@ audio_output_fifo_maintain(buffer_handle_t s0,
 {
   ofifo_t *s = (ofifo_t *)((struct output_finfo *)s0)->p_buffer[index];
   unsigned time_since_last_notification;
+
+  //debug_printf("audio_output_fifo_maintain index %d\n", index);
 
   if (s->pending_init_notification && !(*notified_buf_ctl)) {
     notify_buf_ctl_of_new_stream(buf_ctl, (int)s); // TODO: This can pass the index

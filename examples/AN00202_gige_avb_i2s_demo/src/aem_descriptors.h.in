@@ -767,26 +767,27 @@ unsigned char desc_clock_source_1[] =
 {
   U16(AEM_CLOCK_SOURCE_TYPE),                 /* 0-1 descriptor_type */
   U16(1),                                     /* 2-3 descriptor_id */
+  "CRF Stream",                           /* 4-67 object_name */
+  U16(AEM_NO_STRING),                         /* 68-69 localized_description */
+  U16(AEM_CLOCK_SOURCE_FLAGS_LOCAL_ID),                                     /* 70-71 clock_source_flags */
+  U16(AEM_CLOCK_SOURCE_MEDIA_CLOCK_STREAM),             /* 72-73 clock_source_type */
+  0, 0, 0, 0, 0, 0, 0, 0,                     /* 74-81 clock_source_identifier */
+  U16(AEM_STREAM_INPUT_TYPE),                 /* 82-83 clock_source_location_type */
+  U16(1)                                      /* 84-85 clock_source_location_id */
+};
+
+/* Give local clock the last clock index to simplify clock source to stream association*/
+unsigned char desc_clock_source_2[] =
+{
+  U16(AEM_CLOCK_SOURCE_TYPE),                 /* 0-1 descriptor_type */
+  U16(2),                                     /* 2-3 descriptor_id */
   "Internal Clock",                           /* 4-67 object_name */
   U16(AEM_NO_STRING),                         /* 68-69 localized_description */
   U16(0),                                     /* 70-71 clock_source_flags */
   U16(AEM_CLOCK_SOURCE_INTERNAL),             /* 72-73 clock_source_type */
   0, 0, 0, 0, 0, 0, 0, 0,                     /* 74-81 clock_source_identifier */
   U16(AEM_STREAM_INPUT_TYPE),                 /* 82-83 clock_source_location_type */
-  U16(0)                                      /* 84-85 clock_source_location_id */
-};
-
-unsigned char desc_clock_source_2[] =
-{
-  U16(AEM_CLOCK_SOURCE_TYPE),                 /* 0-1 descriptor_type */
-  U16(2),                                     /* 2-3 descriptor_id */
-  "CRF Stream",                           /* 4-67 object_name */
-  U16(AEM_NO_STRING),                         /* 68-69 localized_description */
-  U16(AEM_CLOCK_SOURCE_FLAGS_LOCAL_ID),                                     /* 70-71 clock_source_flags */
-  U16(AEM_CLOCK_SOURCE_INPUT_STREAM),             /* 72-73 clock_source_type */
-  0, 0, 0, 0, 0, 0, 0, 0,                     /* 74-81 clock_source_identifier */
-  U16(AEM_STREAM_INPUT_TYPE),                 /* 82-83 clock_source_location_type */
-  U16(1)                                      /* 84-85 clock_source_location_id */
+  U16(0)                                      /* 84-85 clock_source_location_id */   // TODO What is a AEM_CLOCK_SOURCE_INTERNAL associated with?
 };
 
 /* Clock Domain Descriptor */
