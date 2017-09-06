@@ -527,11 +527,9 @@ void application_task(client interface avb_interface avb,
 
   // Initialize the media clock
   // TODO Set Format etc according to the entity model!
-  /*
   avb.set_device_media_clock_type(0, DEVICE_MEDIA_CLOCK_INPUT_STREAM_DERIVED);
   avb.set_device_media_clock_rate(0, default_sample_rate);
   avb.set_device_media_clock_state(0, DEVICE_MEDIA_CLOCK_STATE_ENABLED);
-  */
 
   // TODO Set Format etc according to the entity model!
   for (int j=0; j < AVB_NUM_SOURCES; j++)

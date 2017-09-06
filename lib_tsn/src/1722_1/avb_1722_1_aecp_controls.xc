@@ -404,7 +404,10 @@ unsafe void process_aem_cmd_getset_clock_source(avb_1722_1_aecp_packet_t *unsafe
 
     // TODO clean up
     avb.set_device_media_clock_state(media_clock_id, DEVICE_MEDIA_CLOCK_STATE_DISABLED);
-    avb.set_device_media_clock_source(media_clock_id, source_index);
+    if (source_index == 1)
+        avb.set_device_media_clock_source(media_clock_id, 8); //stream 1 maps to fifo 8! TODO We should use the mapping information here!!!
+    else
+        avb.set_device_media_clock_source(media_clock_id, source_index);
     // TODO calculate media clock type properly
     if(source_index < 2) clock_type = DEVICE_MEDIA_CLOCK_INPUT_STREAM_DERIVED;
     else clock_type = DEVICE_MEDIA_CLOCK_LOCAL_CLOCK;

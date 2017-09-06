@@ -56,10 +56,12 @@ void update_stream_derived_clocks(int source_num,
                                   int fill)
 {
   for (int i=0;i<AVB_NUM_MEDIA_CLOCKS;i++) {
+    //debug_printf("update_stream_derived_clocks %d %d\n", media_clocks[i].info.source, source_num);
     if (media_clocks[i].info.active &&
         media_clocks[i].info.clock_type == DEVICE_MEDIA_CLOCK_INPUT_STREAM_DERIVED &&
         media_clocks[i].info.source == source_num)
       {
+        debug_printf("update_stream_derived_clocks %d %d\n", media_clocks[i].info.source, source_num);
         update_media_clock_stream_info(i,
                                        local_ts,
                                        ptp_outgoing_actual,
@@ -145,7 +147,7 @@ static void manage_buffer(buf_info_t &b,
     buf_ctl :> server_tile_id;
   }
 
-  debug_printf("media clock server %d %d %d\n", presentation_timestamp, outgoing_timestamp_local, index);
+  //debug_printf("media clock server %d %d %d\n", presentation_timestamp, outgoing_timestamp_local, index);
 
   if (server_tile_id != get_local_tile_id())
   {
