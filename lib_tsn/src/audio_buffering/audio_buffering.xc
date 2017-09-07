@@ -167,20 +167,24 @@ void audio_buffer_manager(streaming chanend c_audio,
             unsafe {
               if (audio_io_type == AUDIO_I2S_IO) {
                 #pragma loop unroll
-                for (int i=0;i<AVB_NUM_MEDIA_OUTPUTS+1;i+=2) { // +1 for CRF
+                for (int i=0;i<AVB_NUM_MEDIA_OUTPUTS;i+=2) {
                   sample_out_buf[i] = audio_output_fifo_pull_sample(h_out, i,
                                                                     timestamp);
                 }
                 #pragma loop unroll
-                for (int i=1;i<AVB_NUM_MEDIA_OUTPUTS+1;i+=2) { // +1 for CRF
+                for (int i=1;i<AVB_NUM_MEDIA_OUTPUTS;i+=2) {
                   sample_out_buf[i] = audio_output_fifo_pull_sample(h_out, i,
                                                                     timestamp);
                 }
                 c_audio <: (int32_t *unsafe)&sample_out_buf;
+
+                // Update timestamp for CRF
+                audio_output_fifo_pull_sample(h_out, AVB_NUM_MEDIA_OUTPUTS, timestamp);
               }
               else {
                 #pragma loop unroll
-                for (int i=0;i<AVB_NUM_SINKS;i++) { // FIXME: This should be number of TDM lines
+                for (int i=0;i<AVB_NUM_SINKS+1;i++) { // FIXME: This should be number of TDM lines
+                    // +1 for CRF
                   int index = channel + (i*8);
                   sample_out_buf[i] = audio_output_fifo_pull_sample(h_out, index,
                                                                     timestamp);
@@ -188,6 +192,9 @@ void audio_buffer_manager(streaming chanend c_audio,
                 c_audio <: (int32_t *unsafe)&sample_out_buf;
                 channel++;
                 if (channel == 8) channel = 0;
+
+                // Update timestamp for CRF
+                audio_output_fifo_pull_sample(h_out, AVB_NUM_MEDIA_OUTPUTS, timestamp);
               }
             }
             break;
