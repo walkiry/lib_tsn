@@ -9,6 +9,8 @@
 #include "media_clock_client.h"
 #include "misc_timer.h"
 
+//#define PRINT_PRESENTATION 1
+
 // The clock recovery internal representation of the worldlen.  More precision and range than the external
 // worldlen representation.  The max percision is 26 bits before the PTP clock recovery multiplcation overflows
 #define WORDLEN_FRACTIONAL_BITS 24
@@ -35,6 +37,7 @@ typedef struct stream_info_t {
 typedef struct clock_info_t {
 	unsigned long long wordlen;
 	long long ierror;
+	long long ierror_offset;
 	unsigned int rate;
 	int first;
 	stream_info_t stream_info1;
@@ -154,50 +157,69 @@ unsigned int update_media_clock(chanend ptp_svr,
 		// We have all the info we need to perform clock recovery
 		} else {
             //debug_printf("clock_info valid\n");
+		    debug_printf("\n");
 
 #if 1
             // wordlen is in (XMOS-Timerticks per second) << 24
             // 20.83 us = 136533333 external wordlen << 8 >> 24 / 100
+#ifndef PRINT_PRESENTATION
             debug_printf("external wordlen %d\n", local_wordlen_to_external_wordlen(clock_info->wordlen));
+#endif
 
             //debug_printf("%d %d\n", clock_info->stream_info1.presentation_ts, clock_info->stream_info2.presentation_ts);
 
             // Calcualte difference of current and previous timestamp
-            unsigned int diff_presentation = clock_info->stream_info2.presentation_ts
-                    - clock_info->stream_info1.presentation_ts;
+            // Note: This timestamps are based on ptp!
+            unsigned int diff_presentation = clock_info->stream_info1.presentation_ts -
+                    clock_info->stream_info2.presentation_ts;
 
+#ifndef PRINT_PRESENTATION
             debug_printf("diff_presentation %d\n", diff_presentation);
-
-            // save new timestamp
-            //clock_info->stream_info1.presentation_ts = clock_info->stream_info2.presentation_ts;
+#else
+            debug_printf("clock_info->stream_info1.presentation_ts %d\n", clock_info->stream_info1.presentation_ts);
+#endif
 
             // Note: Local timestamps are based on 100MHz clock?
             // diff_local is round about 20 ms
             diff_local = clock_info->stream_info2.local_ts
                     - clock_info->stream_info1.local_ts;
 
+#ifndef PRINT_PRESENTATION
             //debug_printf("stream_info2.local_ts %d stream_info1.local_ts %d diff_local %d\n", clock_info->stream_info2.local_ts, clock_info->stream_info1.local_ts, diff_local);
             debug_printf("diff_local %d\n",  diff_local);
+#endif
 
             // This is ptp time in ns!
-            ierror = (signed) clock_info->stream_info2.outgoing_ptp_ts -
-                     (signed) clock_info->stream_info2.presentation_ts;
-
-            debug_printf("ierror %d ns\n",ierror);
+            ierror = (signed) clock_info->stream_info2.presentation_ts -
+                    (signed) clock_info->stream_info2.outgoing_ptp_ts;
 
             ierror = ierror << WORDLEN_FRACTIONAL_BITS;
+
+            //if(ierror < clock_info->ierror_min) clock_info->ierror_min = ierror;
+
+#ifndef PRINT_PRESENTATION
+            debug_printf("ierror %d ns\n",ierror  >> 32);
+            debug_printf("clock_info->ierror_offset %d ns\n",clock_info->ierror_offset  >> 32);
+#endif
 
             if (clock_info->first) {
                 perror = 0;
                 clock_info->first = 0;
+                clock_info->ierror_offset = (long long)7750 << 32; // TODO Why is this offset required and why is it different for different talkers?
             } else
                 perror = ierror - clock_info->ierror;
 
             clock_info->ierror = ierror;
 
-            debug_printf("perror %d\n",perror);
+#ifndef PRINT_PRESENTATION
+            debug_printf("perror %d ns\n",perror >> 32);
+#endif
 
 
+            debug_printf("ierror/diff_local %d ns\n",(ierror / diff_local) >> 32);
+            debug_printf("perror/diff_local %d ns\n",(perror / diff_local) >> 32);
+
+            clock_info->wordlen = clock_info->wordlen - (((ierror - clock_info->ierror_offset) / diff_local) * 1) / 5 - ((perror / diff_local) * 80)/11;
 
             // save
             clock_info->stream_info1 = clock_info->stream_info2;
