@@ -17,6 +17,8 @@
 #define PLL_TO_WORD_MULTIPLIER 100
 #endif
 
+static unsigned int previous_event_ptp;
+
 /** A description of a media clock */
 typedef struct media_clock_t {
   media_clock_info_t info;
@@ -27,6 +29,7 @@ typedef struct media_clock_t {
   unsigned int lowBits;
   int count;
   unsigned int next_event;
+  unsigned int next_event_ptp;
   unsigned int bit;
 } media_clock_t;
 

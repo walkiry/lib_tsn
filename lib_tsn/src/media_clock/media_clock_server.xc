@@ -399,6 +399,10 @@ void gptp_media_clock_server(server interface media_clock_if media_clock_ctl,
         }
 #endif
         do_media_clock_output(media_clocks[i], p_fs[i]);
+
+        ptp_time_info_mod64 timeInfo;
+        ptp_get_local_time_info_mod64(timeInfo);
+        media_clocks[i].next_event_ptp = local_timestamp_to_ptp_mod32(media_clocks[i].next_event, timeInfo);
         break;
 
 

@@ -117,6 +117,7 @@ unsigned int update_media_clock(chanend ptp_svr,
 								int period0) {
 	clock_info_t *clock_info = &clock_states[clock_index];
 	long long diff_local;
+	long long diff_event;
 	int clock_type = mclock->info.clock_type;
 
 	//debug_printf("update_media_clock\n");
@@ -187,25 +188,35 @@ unsigned int update_media_clock(chanend ptp_svr,
 #ifndef PRINT_PRESENTATION
             //debug_printf("stream_info2.local_ts %d stream_info1.local_ts %d diff_local %d\n", clock_info->stream_info2.local_ts, clock_info->stream_info1.local_ts, diff_local);
             debug_printf("diff_local %d\n",  diff_local);
+
+            diff_event = (signed)mclock->next_event_ptp - (signed)previous_event_ptp;
+            previous_event_ptp = mclock->next_event_ptp;
+            debug_printf("diff_event %d\n",  diff_event);
 #endif
 
+            debug_printf("clock_info->stream_info1.presentation_ts %d\n", clock_info->stream_info1.presentation_ts);
+            debug_printf("clock_info->stream_info2.presentation_ts %d\n", clock_info->stream_info2.presentation_ts);
+            debug_printf("mclock->next_event_ptp %d\n",  mclock->next_event_ptp);
+
             // This is ptp time in ns!
-            ierror = (signed) clock_info->stream_info2.presentation_ts -
-                    (signed) clock_info->stream_info2.outgoing_ptp_ts;
+            ierror = (signed) clock_info->stream_info2.presentation_ts - (signed)mclock->next_event_ptp;
+                    //(signed) clock_info->stream_info2.outgoing_ptp_ts;
 
             ierror = ierror << WORDLEN_FRACTIONAL_BITS;
 
             //if(ierror < clock_info->ierror_min) clock_info->ierror_min = ierror;
 
 #ifndef PRINT_PRESENTATION
-            debug_printf("ierror %d ns\n",ierror  >> 32);
+            debug_printf("ierror %d %dns\n",ierror  >> 32, ierror);
             debug_printf("clock_info->ierror_offset %d ns\n",clock_info->ierror_offset  >> 32);
 #endif
 
             if (clock_info->first) {
                 perror = 0;
                 clock_info->first = 0;
-                clock_info->ierror_offset = (long long)7750 << 32; // TODO Why is this offset required and why is it different for different talkers?
+                clock_info->ierror_offset = 0;
+                //clock_info->ierror_offset = (long long)7750 << 32; //Signalbridge TODO Why is this offset required and why is it different for different talkers?
+                //clock_info->ierror_offset = (long long)7560 << 32; //Hono TODO Why is this offset required and why is it different for different talkers?
             } else
                 perror = ierror - clock_info->ierror;
 
@@ -219,7 +230,7 @@ unsigned int update_media_clock(chanend ptp_svr,
             debug_printf("ierror/diff_local %d ns\n",(ierror / diff_local) >> 32);
             debug_printf("perror/diff_local %d ns\n",(perror / diff_local) >> 32);
 
-            clock_info->wordlen = clock_info->wordlen - (((ierror - clock_info->ierror_offset) / diff_local) * 1) / 5 - ((perror / diff_local) * 80)/11;
+            //clock_info->wordlen = clock_info->wordlen - (((ierror - clock_info->ierror_offset) / diff_local) * 1) / 5 - ((perror / diff_local) * 80)/11;
 
             // save
             clock_info->stream_info1 = clock_info->stream_info2;
