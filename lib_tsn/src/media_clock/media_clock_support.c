@@ -11,7 +11,7 @@
 
 // The clock recovery internal representation of the worldlen.  More precision and range than the external
 // worldlen representation.  The max percision is 26 bits before the PTP clock recovery multiplcation overflows
-#define WORDLEN_FRACTIONAL_BITS 24
+#define WORDLEN_FRACTIONAL_BITS 16
 
 /**
  *  \brief Records the state of the media stream
@@ -154,6 +154,14 @@ unsigned int update_media_clock(chanend ptp_svr,
             diff_local = clock_info->stream_info2.local_ts
                     - clock_info->stream_info1.local_ts;
 
+            debug_printf("\n");
+
+            debug_printf("stream_info2.outgoing_ptp_ts %d\n", clock_info->stream_info2.outgoing_ptp_ts);
+            debug_printf("stream_info2.presentation_ts %d\n", clock_info->stream_info2.presentation_ts);
+
+            debug_printf("stream_info1.outgoing_ptp_ts %d\n", clock_info->stream_info1.outgoing_ptp_ts);
+            debug_printf("stream_info1.presentation_ts %d\n", clock_info->stream_info1.presentation_ts);
+
             perror = (signed) clock_info->stream_info2.outgoing_ptp_ts -
                                  (signed) clock_info->stream_info2.presentation_ts;
 
@@ -164,15 +172,29 @@ unsigned int update_media_clock(chanend ptp_svr,
                 ierror = 0;
                 clock_info->first = 0;
             } else {
+
                 ierror = perror + clock_info->ierror;
+
+                if (ierror > (long long) 1073741824 << WORDLEN_FRACTIONAL_BITS)
+                    ierror = 1073741824<< WORDLEN_FRACTIONAL_BITS; // max value for ierror = 2^62
+                else if (ierror < (long long) -1073741824 << WORDLEN_FRACTIONAL_BITS)
+                    ierror = -1073741824 << WORDLEN_FRACTIONAL_BITS;
+
                 derror = perror - clock_info->perror;
             }
 
             clock_info->ierror = ierror;
             clock_info->perror = perror;
 
+            debug_printf("perror %x %x\n", (unsigned)(perror>>32), (unsigned)perror );
+            debug_printf("ierror %x %x\n", (unsigned)(ierror>>32), (unsigned)ierror );
+            debug_printf("derror %x %x\n", (unsigned)(derror>>32), (unsigned)derror );
+
             // These values were tuned for CS2100-CP PLL
-            clock_info->wordlen = clock_info->wordlen + ((perror / diff_local) * 80)/11 + ((ierror / diff_local) * 1) / 5 + ((derror / diff_local) * 1) / 5;
+            clock_info->wordlen = clock_info->wordlen
+                    - ((ierror / diff_local) / 500)
+                    ;//- ((perror / diff_local) / 10)
+                    //- ((derror / diff_local) / 5);
 
             clock_info->stream_info1 = clock_info->stream_info2;
             previousprevious_event_ptp = previous_event_ptp;
