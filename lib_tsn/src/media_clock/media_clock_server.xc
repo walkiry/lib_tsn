@@ -398,11 +398,14 @@ void gptp_media_clock_server(server interface media_clock_if media_clock_ctl,
             printstrln("ERROR: failed to drive PLL freq signal in time");
         }
 #endif
-        do_media_clock_output(media_clocks[i], p_fs[i]);
 
+        // Save the event timestamp to compare it with the presentation time in the clock recovery function
         ptp_time_info_mod64 timeInfo;
         ptp_get_local_time_info_mod64(timeInfo);
-        media_clocks[i].next_event_ptp = local_timestamp_to_ptp_mod32(media_clocks[i].next_event, timeInfo);
+        media_clocks[i].event_ptp = local_timestamp_to_ptp_mod32(media_clocks[i].next_event, timeInfo);
+
+        // Generate the event
+        do_media_clock_output(media_clocks[i], p_fs[i]);
         break;
 
 

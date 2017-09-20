@@ -45,6 +45,9 @@ typedef struct clock_info_t {
 /// The array of media clock state structures
 static clock_info_t clock_states[AVB_NUM_MEDIA_CLOCKS];
 
+static unsigned int previous_event_ptp;
+static unsigned int previousprevious_event_ptp;
+
 /**
  * \brief Converts the internal 64 bit wordlen into an external 32 bit wordlen
  */
@@ -172,6 +175,8 @@ unsigned int update_media_clock(chanend ptp_svr,
             clock_info->wordlen = clock_info->wordlen + ((perror / diff_local) * 80)/11 + ((ierror / diff_local) * 1) / 5 + ((derror / diff_local) * 1) / 5;
 
             clock_info->stream_info1 = clock_info->stream_info2;
+            previousprevious_event_ptp = previous_event_ptp;
+            previous_event_ptp = mclock->event_ptp;
             clock_info->stream_info2.valid = 0;
         }
         break;
