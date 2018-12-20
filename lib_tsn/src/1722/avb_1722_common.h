@@ -134,10 +134,10 @@ typedef struct
                                         (x->avb_timestamp[1] << 16) | \
                                         (x->avb_timestamp[2] << 8) | \
                                         (x->avb_timestamp[3]))
-#define AVBTP_FORMAT_SPECIFIC(x)       ((x->avb_timestamp[0] << 24) | \
-                                        (x->avb_timestamp[1] << 16) | \
-                                        (x->avb_timestamp[2] << 8) | \
-                                        (x->avb_timestamp[3]))
+#define AVBTP_FORMAT_SPECIFIC(x)       ((x->format_specific[0] << 24) | \
+                                        (x->format_specific[1] << 16) | \
+                                        (x->format_specific[2] << 8) | \
+                                        (x->format_specific[3]))
 
 
 // Macros to set the AVBTP transport layer.
@@ -154,10 +154,10 @@ typedef struct
 #define SET_AVBTP_TIMESTAMP(x, a)         hton_32_inline((x)->avb_timestamp, (a))
 #define SET_AVBTP_STREAM_ID1(x, a)        hton_32_inline(&(x)->stream_id[0], (a))
 #define SET_AVBTP_STREAM_ID0(x, a)        hton_32_inline(&(x)->stream_id[4], (a))
-#define SET_AVBTP_FORMAT_SPECIFIC(x, a)   do {  (x)->protocol_specific[0] = ((a) >> 24)& 0xFF; \
-                                                (x)->protocol_specific[1] = ((a) >> 16)& 0xFF; \
-                                                (x)->protocol_specific[2] = ((a) >> 8)& 0xFF; \
-                                                (x)->protocol_specific[3] = ((a) >> 0)& 0xFF; } while (0)
+#define SET_AVBTP_FORMAT_SPECIFIC(x, a)   do {  (x)->format_specific[0] = ((a) >> 24)& 0xFF; \
+                                                (x)->format_specific[1] = ((a) >> 16)& 0xFF; \
+                                                (x)->format_specific[2] = ((a) >> 8)& 0xFF; \
+                                                (x)->format_specific[3] = ((a) >> 0)& 0xFF; } while (0)
 
 // constants.
 #define AVBTP_CD_DATA      (0)
