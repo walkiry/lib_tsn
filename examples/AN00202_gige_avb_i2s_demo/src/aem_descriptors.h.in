@@ -363,11 +363,14 @@ unsigned char desc_stream_input_0[] =
   U16(AEM_NO_STRING),                         /* 68-69 localized_description */
   U16(0),                                     /* 70-71 clock_domain_index */
   U16(AEM_STREAM_FLAGS_CLASS_A | AEM_STREAM_FLAGS_CLOCK_SYNC_SOURCE),  /* stream_flags */
-  0x00, 0xa0, 0x02, AVB_NUM_MEDIA_OUTPUTS/AVB_NUM_SINKS,    /* current_format */
-  0x40, // b[0], nb[1], reserved[2:]
-  0, // label_iec_60958_cnt
-  AVB_NUM_MEDIA_OUTPUTS/AVB_NUM_SINKS, // label_mbla_cnt
-  0, // label_midi_cnt[0:3], label_smptecnt[4:]
+  0x02, 									  /* v=0, subtype=AAF, res=0, ut=0, nsr=48kHz, format=INT32, bitdepth=32 */
+  0x05, 
+  0x02,
+  0x20, 
+  0x02,										  /* channels_per_frame=8, samples_per_frame=6, reserved = 0 */
+  0x00, 
+  0x60, 
+  0x00, 
   U16(132),                                   /* formats_offset */
   U16(3),                                     /* number_of_formats */
   0, 0, 0, 0, 0, 0, 0, 0,                     /* backup_talker_guid[0] */
@@ -382,23 +385,32 @@ unsigned char desc_stream_input_0[] =
   U32(0),                                     /* buffer_length */
   /* 130-> formats */
   /* 48 khz */
-  0x00, 0xa0, 0x02, AVB_NUM_MEDIA_OUTPUTS/AVB_NUM_SINKS,
-  0x40, // b[0], nb[1], reserved[2:]
-  0, // label_iec_60958_cnt
-  AVB_NUM_MEDIA_OUTPUTS/AVB_NUM_SINKS, // label_mbla_cnt
-  0, // label_midi_cnt[0:3], label_smptecnt[4:]
+  0x02, 									  /* v=0, subtype=AAF, res=0, ut=0, nsr=48kHz, format=INT32, bitdepth=32 */
+  0x05, 
+  0x02,
+  0x20, 
+  0x02,										  /* channels_per_frame=8, samples_per_frame=6, reserved = 0 */
+  0x00, 
+  0x60, 
+  0x00, 
   // 96 
-  0x00, 0xa0, 0x04, AVB_NUM_MEDIA_OUTPUTS/AVB_NUM_SINKS,
-  0x40, // b[0], nb[1], reserved[2:]
-  0, // label_iec_60958_cnt
-  AVB_NUM_MEDIA_OUTPUTS/AVB_NUM_SINKS, // label_mbla_cnt
-  0, // label_midi_cnt[0:3], label_smptecnt[4:]
+  0x02, 									  /* v=0, subtype=AAF, res=0, ut=0, nsr=96kHz, format=INT32, bitdepth=32 */
+  0x07, 
+  0x02,
+  0x20, 
+  0x02,										  /* channels_per_frame=8, samples_per_frame=12, reserved = 0 */
+  0x00, 
+  0xC0, 
+  0x00, 
   // 192
-  0x00, 0xa0, 0x06, AVB_NUM_MEDIA_OUTPUTS/AVB_NUM_SINKS,
-  0x40, // b[0], nb[1], reserved[2:]
-  0, // label_iec_60958_cnt
-  AVB_NUM_MEDIA_OUTPUTS/AVB_NUM_SINKS, // label_mbla_cnt
-  0 // label_midi_cnt[0:3], label_smptecnt[4:]
+  0x02, 									  /* v=0, subtype=AAF, res=0, ut=0, nsr=192kHz, format=INT32, bitdepth=32 */
+  0x09, 
+  0x02,
+  0x20, 
+  0x02,										  /* channels_per_frame=8, samples_per_frame=24, reserved = 0 */
+  0x01, 
+  0x80, 
+  0x00
 };
 #endif
 
@@ -412,11 +424,14 @@ unsigned char desc_stream_output_0[] =
   U16(AEM_NO_STRING),                         /* 68-69 localized_description */
   U16(0),                                     /* 70-71 clock_domain_index */
   U16(AEM_STREAM_FLAGS_CLASS_A),              /* stream_flags */
-  0x00, 0xa0, 0x02, AVB_NUM_MEDIA_INPUTS/AVB_NUM_SOURCES,     /* current_format */
-  0x40, // b[0], nb[1], reserved[2:]
-  0, // label_iec_60958_cnt
-  AVB_NUM_MEDIA_INPUTS/AVB_NUM_SOURCES, // label_mbla_cnt
-  0, // label_midi_cnt[0:3], label_smptecnt[4:]
+  0x02, 									  /* v=0, subtype=AAF, res=0, ut=0, nsr=48kHz, format=INT32, bitdepth=32 */
+  0x05, 
+  0x02,
+  0x20, 
+  0x02,										  /* channels_per_frame=8, samples_per_frame=6, reserved = 0 */
+  0x00, 
+  0x60, 
+  0x00, 
   U16(132),                                   /* formats_offset */
   U16(3),                                     /* number_of_formats */
   0, 0, 0, 0, 0, 0, 0, 0,                     /* backup_talker_guid[0] */
@@ -431,23 +446,32 @@ unsigned char desc_stream_output_0[] =
   U32(0),                                     /* buffer_length */
   /* 130-> formats */
   /* 48 khz */
-  0x00, 0xa0, 0x02, AVB_NUM_MEDIA_INPUTS/AVB_NUM_SOURCES,
-  0x40, // b[0], nb[1], reserved[2:]
-  0, // label_iec_60958_cnt
-  AVB_NUM_MEDIA_INPUTS/AVB_NUM_SOURCES, // label_mbla_cnt
-  0, // label_midi_cnt[0:3], label_smptecnt[4:]
+  0x02, 									  /* v=0, subtype=AAF, res=0, ut=0, nsr=48kHz, format=INT32, bitdepth=32 */
+  0x05, 
+  0x02,
+  0x20, 
+  0x02,										  /* channels_per_frame=8, samples_per_frame=6, reserved = 0 */
+  0x00, 
+  0x60, 
+  0x00, 
   // 96 
-  0x00, 0xa0, 0x04, AVB_NUM_MEDIA_OUTPUTS/AVB_NUM_SINKS,
-  0x40, // b[0], nb[1], reserved[2:]
-  0, // label_iec_60958_cnt
-  AVB_NUM_MEDIA_OUTPUTS/AVB_NUM_SINKS, // label_mbla_cnt
-  0, // label_midi_cnt[0:3], label_smptecnt[4:]
+  0x02, 									  /* v=0, subtype=AAF, res=0, ut=0, nsr=96kHz, format=INT32, bitdepth=32 */
+  0x07, 
+  0x02,
+  0x20, 
+  0x02,										  /* channels_per_frame=8, samples_per_frame=12, reserved = 0 */
+  0x00, 
+  0xC0, 
+  0x00, 
   // 192
-  0x00, 0xa0, 0x06, AVB_NUM_MEDIA_OUTPUTS/AVB_NUM_SINKS,
-  0x40, // b[0], nb[1], reserved[2:]
-  0, // label_iec_60958_cnt
-  AVB_NUM_MEDIA_OUTPUTS/AVB_NUM_SINKS, // label_mbla_cnt
-  0 // label_midi_cnt[0:3], label_smptecnt[4:]
+  0x02, 									  /* v=0, subtype=AAF, res=0, ut=0, nsr=192kHz, format=INT32, bitdepth=32 */
+  0x09, 
+  0x02,
+  0x20, 
+  0x02,										  /* channels_per_frame=8, samples_per_frame=24, reserved = 0 */
+  0x01, 
+  0x80, 
+  0x00
 };
 #endif
 
