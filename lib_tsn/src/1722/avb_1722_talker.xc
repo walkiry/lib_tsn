@@ -55,23 +55,19 @@ static transaction configure_stream(chanend avb1722_tx_config,
 
   avb1722_tx_config :> stream.presentation_delay;
 
+  unsigned int nsr = 0;
+
   switch (rate)
   {
-  case 8000:   stream.ts_interval = 1; break;
-  case 16000:  stream.ts_interval = 2; break;
-  case 32000:  stream.ts_interval = 8; break;
-  case 44100:  stream.ts_interval = 8; break;
-  case 48000:  stream.ts_interval = 8; break;
-  case 88200:  stream.ts_interval = 16; break;
-  case 96000:  stream.ts_interval = 16; break;
-  case 176400: stream.ts_interval = 32; break;
-  case 192000: stream.ts_interval = 32; break;
+  case 48000:  stream.ts_interval =  6; stream.samples_per_packet_base =  6; nsr = 0x5; break;
+  case 96000:  stream.ts_interval = 12; stream.samples_per_packet_base = 12; nsr = 0x7; break;
+  case 192000: stream.ts_interval = 24; stream.samples_per_packet_base = 24; nsr = 0x9; break;
   default: __builtin_trap(); break;
   }
 
-  tmp = ((rate / 100) << 16) / (AVB1722_PACKET_RATE / 100);
-  stream.samples_per_packet_base = tmp >> 16;
-  stream.samples_per_packet_fractional = tmp & 0xffff;
+  stream.format_specific = (0x2 << 24) | (nsr << 19) | (stream.num_channels << 8) | (32-1);
+
+  stream.samples_per_packet_fractional = 0;
   stream.rem = 0;
 
   stream.current_samples_in_packet = 0;
