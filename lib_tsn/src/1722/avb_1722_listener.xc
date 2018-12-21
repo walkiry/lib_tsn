@@ -18,8 +18,9 @@
 
 #define TIMEINFO_UPDATE_INTERVAL 50000000
 
-#ifdef AVB_1722_FORMAT_61883_6
-#define MAX_PKT_BUF_SIZE_LISTENER (AVB_ETHERNET_HDR_SIZE + AVB_TP_HDR_SIZE + AVB_CIP_HDR_SIZE + AVB1722_LISTENER_MAX_NUM_SAMPLES_PER_CHANNEL * AVB_MAX_CHANNELS_PER_LISTENER_STREAM * 4 + 2)
+#ifdef AVB_1722_FORMAT_AAF
+// TODO Why do we need +2?
+#define MAX_PKT_BUF_SIZE_LISTENER (AVB_ETHERNET_HDR_SIZE + AVB_TP_HDR_SIZE + AVB1722_LISTENER_MAX_NUM_SAMPLES_PER_CHANNEL * AVB_MAX_CHANNELS_PER_LISTENER_STREAM * 4 + 2)
 #endif
 
 static transaction configure_stream(chanend c,
@@ -47,7 +48,6 @@ static transaction configure_stream(chanend c,
 	s.num_channels_in_payload = 0;
 	s.chan_lock = 0;
 	s.prev_num_samples = 0;
-	s.dbc = -1;
 }
 
 static transaction adjust_stream(chanend c,

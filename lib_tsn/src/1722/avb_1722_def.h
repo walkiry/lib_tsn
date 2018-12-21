@@ -45,62 +45,13 @@
 
 #define AVB_DEFAULT_VLAN                   (2)
 
-// 61883-6 CIP header
-#define AVB_CIP_HDR_SIZE    				(8)
-
-// 61883-6/AVB1722 CIP Header definitions.
-typedef struct
-{
-  unsigned char SID;             // bit 0,1 are fixed 00;
-  unsigned char DBS;             // Data block size. In 61883 a data block is all information arriving
-								 // at the transmitter in one sample period. Thus is our case it is the
-                                 // size of one sample multiplied by the number of channels (in quadlets)
-  unsigned char FN_QPC_SPH;      // bit 0-1 : Fraction Number
-                                 // bit 2-4 : quadlet padding count
-                                 // bit 5   : source packet header
-  unsigned char DBC;             // data block count
-  unsigned char FMT;             // stream format
-  unsigned char FDF;             // format dependent field
-  unsigned char SYT[2];          // synchronisation timing
-
-} AVB_AVB1722_CIP_Header_t;
-
 // NOTE: It is worth pointing out that the 'data block' in 61886-3 means a sample (or
 // a collection of samples one for each channel)
 
-//
-// Macros for 61883 header
-//
-#define SET_AVB1722_CIP_TAG(x, a)              (x->protocol_specific[0] |= (a & 0x3) << 6)
 
-#define SET_AVB1722_CIP_CHANNEL(x, a)          (x->protocol_specific[0] |= (a & 0x3F))
-#define SET_AVB1722_CIP_TCODE(x, a)            (x->protocol_specific[1] |= (a & 0xF) << 4)
-#define SET_AVB1722_CIP_SY(x, a)               (x->protocol_specific[1] |= (a & 0xF))
-
-#define SET_AVB1722_CIP_SID(x, a)              (x->SID |= (a & 0x3F))
-#define SET_AVB1722_CIP_EOH1(x, a)             (x->SID |= (a & 0x3) << 6)
-#define SET_AVB1722_CIP_DBS(x, a)              (x->DBS = a)
-#define SET_AVB1722_CIP_FN(x, a)               (x->FN_QPC_SPH |= (a & 0x3) << 6)
-#define SET_AVB1722_CIP_QPC(x, a)              (x->FN_QPC_SPH |= (a & 0x7) << 3)
-#define SET_AVB1722_CIP_SPH(x, a)              (x->FN_QPC_SPH |= (a & 0x1) << 2)
-#define SET_AVB1722_CIP_DBC(x, a)              (x->DBC = a)
-#define SET_AVB1722_CIP_EOH2(x, a)             (x->FMT |= (a & 0x3) << 6)
-#define SET_AVB1722_CIP_FMT(x, a)              (x->FMT |= (a & 0x3F))
-#define SET_AVB1722_CIP_FDF(x, a)              (x->FDF = a)
-#define SET_AVB1722_CIP_SYT(x, a)              do {x->SYT[0] = a >> 8; \
-                                                 x->SYT[1] = a & 0xFF; } while (0)
 
 // Audio MBLA definitions (top 8 bits for easy combination with sample)
-//   From 61883:
-//   0100---- = multibit linear audio
-//   ----00-- = raw audio sample
-//   ------00 = 24 bit
-//   ------01 = 20 bit
-//   ------10 = 16 bit
-//   ------11 = undefined
-#define MBLA_24BIT                           (0x40000000)
-#define MBLA_20BIT                           (0x41000000)
-#define MBLA_16BIT                           (0x42000000)
+#define AAF_32BIT                           (0x02000000)
 
 // Generic configuration
 
@@ -130,7 +81,5 @@ enum {
 
 // We add a 2% fudge factor to handle clock difference in the stream transmission shaping
 #define AVB1722_PACKET_PERIOD_TIMER_TICKS (((100000000 / AVB1722_PACKET_RATE)*98)/100)
-
-#define AVB1722_PLUS_SIP_HEADER_SIZE (32)
 
 #endif

@@ -10,7 +10,7 @@
 #include "default_avb_conf.h"
 #include "debug_print.h"
 
-#if defined(AVB_1722_FORMAT_SAF) || defined(AVB_1722_FORMAT_61883_6)
+#if defined(AVB_1722_FORMAT_AAF)
 
 #if AVB_1722_RECORD_ERRORS
 static unsigned char prev_seq_num = 0;
@@ -27,11 +27,9 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
 {
   int pktDataLength, dbc_value;
   AVB_DataHeader_t *pAVBHdr;
-  AVB_AVB1722_CIP_Header_t *pAVB1722Hdr;
   int avb_ethernet_hdr_size = (Buf[12]==0x81) ? 18 : 14;
   int num_samples_in_payload, num_channels_in_payload;
   pAVBHdr = (AVB_DataHeader_t *) &(Buf[avb_ethernet_hdr_size]);
-  pAVB1722Hdr = (AVB_AVB1722_CIP_Header_t *) &(Buf[avb_ethernet_hdr_size + AVB_TP_HDR_SIZE]);
   unsigned char *sample_ptr;
   int i;
   int num_channels = stream_info->num_channels;
@@ -40,15 +38,11 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
   int dbc_diff;
 
   // sanity check on number bytes in payload
-  if (numBytes <= avb_ethernet_hdr_size + AVB_TP_HDR_SIZE + AVB_CIP_HDR_SIZE)
+  if (numBytes <= avb_ethernet_hdr_size + AVB_TP_HDR_SIZE)
   {
     return (0);
   }
   if (AVBTP_VERSION(pAVBHdr) != 0)
-  {
-    return (0);
-  }
-  if (AVBTP_CD(pAVBHdr) != AVBTP_CD_DATA)
   {
     return (0);
   }
@@ -65,15 +59,8 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
   prev_seq_num = seq_num;
 #endif
 
-  dbc_value = (int) pAVB1722Hdr->DBC;
-  dbc_diff = dbc_value - stream_info->dbc;
-  stream_info->dbc = dbc_value;
-
-  if (dbc_diff < 0)
-    dbc_diff += 0x100;
-
-
-  pktDataLength = NTOH_U16(pAVBHdr->packet_data_length);
+  // TODO calcualte correctly! for now use Asumption: Format=INT32BIT, 8 channels, 6 samples per frame
+  pktDataLength = 6*8*4;
   num_samples_in_payload = (pktDataLength-8)>>2;
 
   int prev_num_samples = stream_info->prev_num_samples;
@@ -164,9 +151,7 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
 
 
   // now send the samples
-  sample_ptr = (unsigned char *) &Buf[(avb_ethernet_hdr_size +
-                                       AVB_TP_HDR_SIZE +
-                                       AVB_CIP_HDR_SIZE)];
+  sample_ptr = (unsigned char *) &Buf[(avb_ethernet_hdr_size + AVB_TP_HDR_SIZE)];
 
   num_channels_in_payload = stream_info->num_channels_in_payload;
 

@@ -36,7 +36,6 @@ typedef struct avb_1722_stream_info_t {
   int prev_num_samples;            //!< Number of samples in last received 1722 packet
   int num_channels_in_payload;     //!< The number of channels in the 1722 payloads
   int num_channels;
-  int dbc;                         //!< The DBC of the last seen packet
   int last_sequence;               //!< The sequence number from the last 1722 packet
   audio_output_fifo_t map[AVB_MAX_CHANNELS_PER_LISTENER_STREAM];
 } avb_1722_stream_info_t;

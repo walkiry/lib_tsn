@@ -72,6 +72,8 @@ typedef struct avb1722_Talker_StreamConfig_t
   int txport;
   //! a transmitted packet sequence counter
   char sequence_number;
+  //! format specific field for aaf
+  unsigned int format_specific;
 } avb1722_Talker_StreamConfig_t;
 
 
@@ -105,8 +107,8 @@ int avb1722_create_packet(unsigned char Buf[],
 }
 #endif
 
-#ifdef AVB_1722_FORMAT_61883_6
-#define MAX_PKT_BUF_SIZE_TALKER (AVB_ETHERNET_HDR_SIZE + AVB_TP_HDR_SIZE + AVB_CIP_HDR_SIZE + AVB1722_TALKER_MAX_NUM_SAMPLES_PER_CHANNEL * AVB_MAX_CHANNELS_PER_TALKER_STREAM * 4 + 4)
+#ifdef AVB_1722_FORMAT_AAF
+#define MAX_PKT_BUF_SIZE_TALKER (AVB_ETHERNET_HDR_SIZE + AVB_TP_HDR_SIZE + AVB1722_TALKER_MAX_NUM_SAMPLES_PER_CHANNEL * AVB_MAX_CHANNELS_PER_TALKER_STREAM * 4 + 4)
 #endif
 
 struct talker_counters {
