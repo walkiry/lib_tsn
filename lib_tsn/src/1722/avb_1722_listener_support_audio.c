@@ -25,7 +25,7 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
                                      int *notified_buf_ctl,
                                      buffer_handle_t h)
 {
-  int pktDataLength, dbc_value;
+  int pktDataLength;
   AVB_DataHeader_t *pAVBHdr;
   int avb_ethernet_hdr_size = (Buf[12]==0x81) ? 18 : 14;
   int num_samples_in_payload, num_channels_in_payload;
@@ -35,7 +35,6 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
   int num_channels = stream_info->num_channels;
   audio_output_fifo_t *map = &stream_info->map[0];
   int stride;
-  int dbc_diff;
 
   // sanity check on number bytes in payload
   if (numBytes <= avb_ethernet_hdr_size + AVB_TP_HDR_SIZE)
@@ -111,26 +110,7 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
 
   if ((AVBTP_TV(pAVBHdr)==1))
   {
-    // See 61883-6 section 6.2 which explains that the receiver can calculate
-    // which data block (sample) the timestamp refers to using the formula:
-    //   index = (SYT_INTERVAL - dbc % SYT_INTERVAL) % SYT_INTERVAL
-
-    unsigned syt_interval = 0, sample_num = 0;
-
-    switch (stream_info->rate)
-    {
-    case 8000:   syt_interval = 1; break;
-    case 16000:  syt_interval = 2; break;
-    case 32000:  syt_interval = 8; break;
-    case 44100:  syt_interval = 8; break;
-    case 48000:  syt_interval = 8; break;
-    case 88200:  syt_interval = 16; break;
-    case 96000:  syt_interval = 16; break;
-    case 176400: syt_interval = 32; break;
-    case 192000: syt_interval = 32; break;
-    default: return 0; break;
-    }
-    sample_num = (syt_interval - (dbc_value & (syt_interval-1))) & (syt_interval-1);
+    unsigned sample_num = 0;
     // register timestamp
     for (int i=0; i<num_channels; i++)
     {
