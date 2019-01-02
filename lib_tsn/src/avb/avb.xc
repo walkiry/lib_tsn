@@ -68,6 +68,7 @@ static void register_talkers(chanend (&?c_talker_ctl)[], unsigned char mac_addr[
             AVB_SRP_TSPEC_RESERVED_VALUE);
         source->reservation.tspec_max_interval = AVB_SRP_MAX_INTERVAL_FRAMES_DEFAULT;
         source->reservation.accumulated_latency = AVB_SRP_ACCUMULATED_LATENCY_DEFAULT;
+        debug_printf("register_talkers: num_channels %d\n", source->stream.num_channels);
         max_talker_stream_id++;
       }
     }
@@ -94,6 +95,7 @@ static void register_listeners(chanend (&?c_listener_ctl)[])
         sink->stream.local_id = j;
         sink->stream.flags = 0;
         sink->reservation.vlan_id = 0;
+        debug_printf("register_listeners: num_channels %d\n", sink->stream.num_channels);
         max_listener_stream_id++;
       }
       c_listener_ctl[i] <: max_link_id;
@@ -184,7 +186,7 @@ static int valid_to_leave_vlan(int vlan)
 }
 
 static void set_avb_sink_map(chanend c, avb_sink_info_t &sink, unsigned sink_num) {
-  debug_printf("Listener sink #%d chan map:\n", sink_num);
+  debug_printf("set_avb_sink_map: Listener sink #%d chan map (%d channels):\n", sink_num, sink.stream.num_channels);
   master {
     c <: AVB1722_ADJUST_LISTENER_STREAM;
     c <: (int)sink.stream.local_id;
@@ -215,7 +217,7 @@ static void update_sink_state(unsigned sink_num,
         state == AVB_SINK_STATE_POTENTIAL) {
 
       unsigned clk_ctl = outputs[sink->map[0]].clk_ctl;
-      debug_printf("Listener sink #%d chan map:\n", sink_num);
+      debug_printf("update_sink_state: Listener sink #%d chan map (%d channels):\n", sink_num, (int)sink->stream.num_channels);
       master {
         *c <: AVB1722_CONFIGURE_LISTENER_STREAM;
         *c <: (int)sink->stream.local_id;
@@ -363,6 +365,7 @@ static void update_source_state(unsigned source_num,
       }
 
       // check that the map is ok
+      debug_printf("source->stream.num_channels %d\n", source->stream.num_channels);
       for (int i=0;i<source->stream.num_channels;i++) {
         if (inputs[source->map[i]].mapped_to != UNMAPPED) {
           valid = 0;

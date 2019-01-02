@@ -78,6 +78,8 @@ void AVB1722_Talker_bufInit(unsigned char Buf0[],
         break;
     }
 
+    debug_printf("pStreamConfig->num_channels %d\n", pStreamConfig->num_channels);
+
     // clear all the bytes in header.
     memset( (void *) Buf, 0, (AVB_ETHERNET_HDR_SIZE + AVB_TP_HDR_SIZE));
 

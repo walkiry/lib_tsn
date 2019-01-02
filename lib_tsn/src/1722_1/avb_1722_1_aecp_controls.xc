@@ -67,7 +67,7 @@ static unsafe void get_stream_format_field(avb_stream_info_t *unsafe stream_info
   int samples_per_frame = getSamplesPerFrame(stream_info->rate);
   stream_format[4] =   (stream_info->num_channels >> 2) & 0xff;
   stream_format[5] = (((stream_info->num_channels << 6) & 0x3) | (samples_per_frame >> 4)) & 0xff;
-  stream_format[6] =   (stream_info->num_channels << 4) & 0xff;
+  stream_format[6] =   (samples_per_frame << 4) & 0xff;
   stream_format[7] = 0x00;
 }
 

@@ -536,7 +536,7 @@ void application_task(client interface avb_interface avb,
     int map[AVB_NUM_MEDIA_INPUTS/AVB_NUM_SOURCES];
     for (int i = 0; i < channels_per_stream; i++) map[i] = j ? j*channels_per_stream+i : j+i;
     avb.set_source_map(j, map, channels_per_stream);
-    avb.set_source_format(j, AVB_FORMAT_MBLA_24BIT, default_sample_rate);
+    avb.set_source_format(j, AVB_FORMAT_AAF, default_sample_rate);
     avb.set_source_sync(j, 0);
     avb.set_source_channels(j, channels_per_stream);
   }
@@ -547,7 +547,7 @@ void application_task(client interface avb_interface avb,
     int map[AVB_NUM_MEDIA_OUTPUTS/AVB_NUM_SINKS];
     for (int i = 0; i < channels_per_stream; i++) map[i] = j ? j*channels_per_stream+i : j+i;
     avb.set_sink_map(j, map, channels_per_stream);
-    avb.set_sink_format(j, AVB_FORMAT_MBLA_24BIT, default_sample_rate);
+    avb.set_sink_format(j, AVB_FORMAT_AAF, default_sample_rate);
     avb.set_sink_sync(j, 0);
     avb.set_sink_channels(j, channels_per_stream);
   }
