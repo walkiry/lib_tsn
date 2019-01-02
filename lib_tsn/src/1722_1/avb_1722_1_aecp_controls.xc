@@ -14,17 +14,24 @@
 #include "aem_descriptor_types.h"
 #include "aem_descriptor_structs.h"
 
+static int getSamplesPerFrame(int rate)
+{
+    switch (rate)
+    {
+      case 48000:  return 0x0006;
+      case 96000:  return 0x000C;
+      case 192000: return 0x0018;
+      default:     return 0x0000;
+    }
+}
+
 static int sfc_from_sampling_rate(int rate)
 {
   switch (rate)
   {
-    case 32000: return 0;
-    case 44100: return 1;
-    case 48000: return 2;
-    case 88200: return 3;
-    case 96000: return 4;
-    case 176400: return 5;
-    case 192000: return 6;
+    case 48000:  return 0x05;
+    case 96000:  return 0x07;
+    case 192000: return 0x09;
     default: return 0;
   }
 }
@@ -46,14 +53,26 @@ static int sampling_rate_from_sfc(int sfc)
 
 static unsafe void get_stream_format_field(avb_stream_info_t *unsafe stream_info, unsigned char stream_format[8])
 {
-  stream_format[0] = 0x00;
-  stream_format[1] = 0xa0;
-  stream_format[2] = sfc_from_sampling_rate(stream_info->rate); // 10.3.2 in 61883-6
-  stream_format[3] = stream_info->num_channels; // dbs
-  stream_format[4] = 0x40; // b[0], nb[1], reserved[2:]
-  stream_format[5] = 0; // label_iec_60958_cnt
-  stream_format[6] = stream_info->num_channels; // label_mbla_cnt
-  stream_format[7] = 0; // label_midi_cnt[0:3], label_smptecnt[4:]
+    /* This is the default format from our aem_descripts.h.in file
+     * 48 khz 8ch
+    0x02,                                       // v=0, subtype=AAF, res=0, ut=0,
+    0x05,                                       // nsr=48kHz,
+    0x02,                                       // format=INT32, bitdepth=32
+    0x20,
+    0x02,                                       // channels_per_frame=8, samples_per_frame=6, reserved = 0
+    0x00,
+    0x60,
+    0x00,
+    */
+  stream_format[0] = 0x02; // AAF
+  stream_format[1] = sfc_from_sampling_rate(stream_info->rate);
+  stream_format[2] = 0x02; // format=INT32, bitdepth=32
+  stream_format[3] = 0x20;
+  int samples_per_frame = getSamplesPerFrame(stream_info->rate);
+  stream_format[4] =   (stream_info->num_channels >> 2) & 0xff;
+  stream_format[5] = (((stream_info->num_channels << 6) & 0x3) | (samples_per_frame >> 4)) & 0xff;
+  stream_format[6] =   (stream_info->num_channels << 4) & 0xff;
+  stream_format[7] = 0x00;
 }
 
 unsafe void set_current_fields_in_descriptor(unsigned char *unsafe descriptor,
