@@ -40,13 +40,9 @@ static int sampling_rate_from_sfc(int sfc)
 {
   switch (sfc)
   {
-    case 0: return 32000;
-    case 1: return 44100;
-    case 2: return 48000;
-    case 3: return 88200;
-    case 4: return 96000;
-    case 5: return 176400;
-    case 6: return 192000;
+    case 0x05: return 48000;
+    case 0x07: return 96000;
+    case 0x09: return 192000;
     default: return 0;
   }
 }
@@ -242,9 +238,19 @@ unsafe void process_aem_cmd_getset_stream_format(avb_1722_1_aecp_packet_t *unsaf
   }
   else // AECP_AEM_CMD_SET_STREAM_FORMAT
   {
-    format = AVB_FORMAT_MBLA_24BIT;
-    rate = sampling_rate_from_sfc(cmd->stream_format[2]);
-    channels = cmd->stream_format[6];
+    format = AVB_FORMAT_AAF;
+    rate = sampling_rate_from_sfc(cmd->stream_format[1]);
+    channels = ((cmd->stream_format[4] << 2) | (cmd->stream_format[5] >> 6)) & 0x03ff;
+    debug_printf("AECP_AEM_CMD_SET_STREAM_FORMAT: cmd[0...7] 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n",
+            cmd->stream_format[0],
+            cmd->stream_format[1],
+            cmd->stream_format[2],
+            cmd->stream_format[3],
+            cmd->stream_format[4],
+            cmd->stream_format[5],
+            cmd->stream_format[6],
+            cmd->stream_format[7]);
+    debug_printf("AECP_AEM_CMD_SET_STREAM_FORMAT: rate %d, channels %d\n", rate, channels);
 
     if (stream->state == AVB_SOURCE_STATE_ENABLED)
     {
