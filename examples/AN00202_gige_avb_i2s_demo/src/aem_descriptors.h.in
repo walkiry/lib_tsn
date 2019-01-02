@@ -367,12 +367,12 @@ unsigned char desc_stream_input_0[] =
   0x05, 
   0x02,
   0x20, 
-  0x02,										  /* channels_per_frame=8, samples_per_frame=6, reserved = 0 */
+  0x01,										  /* channels_per_frame=4, samples_per_frame=6, reserved = 0 */
   0x00, 
   0x60, 
   0x00, 
   U16(132),                                   /* formats_offset */
-  U16(3),                                     /* number_of_formats */
+  U16(6),                                     /* number_of_formats */
   0, 0, 0, 0, 0, 0, 0, 0,                     /* backup_talker_guid[0] */
   U16(0),                                     /* backup_talker_unique[0] */
   0, 0, 0, 0, 0, 0, 0, 0,                     /* backup_talker_guid[1] */
@@ -384,7 +384,7 @@ unsigned char desc_stream_input_0[] =
   U16(0),                                     /* avb_interface_id */
   U32(0),                                     /* buffer_length */
   /* 130-> formats */
-  /* 48 khz */
+  /* 48 khz 8ch */
   0x02, 									  /* v=0, subtype=AAF, res=0, ut=0, nsr=48kHz, format=INT32, bitdepth=32 */
   0x05, 
   0x02,
@@ -393,7 +393,16 @@ unsigned char desc_stream_input_0[] =
   0x00, 
   0x60, 
   0x00, 
-  // 96 
+    /* 48 khz 4ch */
+  0x02, 									  /* v=0, subtype=AAF, res=0, ut=0, nsr=48kHz, format=INT32, bitdepth=32 */
+  0x05, 
+  0x02,
+  0x20, 
+  0x01,										  /* channels_per_frame=4, samples_per_frame=6, reserved = 0 */
+  0x00, 
+  0x60, 
+  0x00, 
+  // 96 8ch 
   0x02, 									  /* v=0, subtype=AAF, res=0, ut=0, nsr=96kHz, format=INT32, bitdepth=32 */
   0x07, 
   0x02,
@@ -402,12 +411,30 @@ unsigned char desc_stream_input_0[] =
   0x00, 
   0xC0, 
   0x00, 
-  // 192
+    // 96 4ch 
+  0x02, 									  /* v=0, subtype=AAF, res=0, ut=0, nsr=96kHz, format=INT32, bitdepth=32 */
+  0x07, 
+  0x02,
+  0x20, 
+  0x01,										  /* channels_per_frame=4, samples_per_frame=12, reserved = 0 */
+  0x00, 
+  0xC0, 
+  0x00, 
+  // 192 8ch
   0x02, 									  /* v=0, subtype=AAF, res=0, ut=0, nsr=192kHz, format=INT32, bitdepth=32 */
   0x09, 
   0x02,
   0x20, 
   0x02,										  /* channels_per_frame=8, samples_per_frame=24, reserved = 0 */
+  0x01, 
+  0x80, 
+  0x00
+    // 192 4ch
+  0x02, 									  /* v=0, subtype=AAF, res=0, ut=0, nsr=192kHz, format=INT32, bitdepth=32 */
+  0x09, 
+  0x02,
+  0x20, 
+  0x01,										  /* channels_per_frame=4, samples_per_frame=24, reserved = 0 */
   0x01, 
   0x80, 
   0x00
