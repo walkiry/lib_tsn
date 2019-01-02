@@ -428,7 +428,7 @@ unsigned char desc_stream_input_0[] =
   0x02,										  /* channels_per_frame=8, samples_per_frame=24, reserved = 0 */
   0x01, 
   0x80, 
-  0x00
+  0x00,
     // 192 4ch
   0x02, 									  /* v=0, subtype=AAF, res=0, ut=0, nsr=192kHz, format=INT32, bitdepth=32 */
   0x09, 
