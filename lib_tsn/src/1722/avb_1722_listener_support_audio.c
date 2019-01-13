@@ -28,13 +28,11 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
   int pktDataLength;
   AVB_DataHeader_t *pAVBHdr;
   int avb_ethernet_hdr_size = (Buf[12]==0x81) ? 18 : 14;
-  int num_samples_in_payload, num_channels_in_payload;
+  int num_samples_per_channel;
   pAVBHdr = (AVB_DataHeader_t *) &(Buf[avb_ethernet_hdr_size]);
   unsigned char *sample_ptr;
   int i;
-  int num_channels = stream_info->num_channels;
   audio_output_fifo_t *map = &stream_info->map[0];
-  int stride;
 
   // sanity check on number bytes in payload
   if (numBytes <= avb_ethernet_hdr_size + AVB_TP_HDR_SIZE)
@@ -58,27 +56,16 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
   prev_seq_num = seq_num;
 #endif
 
-  // TODO calcualte correctly! for now use Asumption: Format=INT32BIT, 8 channels, 6 samples per frame
-  pktDataLength = 6*8*4;
-  num_samples_in_payload = (pktDataLength-8)>>2;
+  // TODO support other samplign rates
+  num_samples_per_channel =  6; // at 48kHz
 
-  int prev_num_samples = stream_info->prev_num_samples;
-  stream_info->prev_num_samples = num_samples_in_payload;
+  int num_samples_in_payload = num_samples_per_channel * stream_info->num_channels_in_payload;
 
   if (stream_info->chan_lock < 16)
   {
-    int num_channels;
 
-    if (!prev_num_samples || dbc_diff == 0) {
-      return 0;
-    }
-
-    num_channels = prev_num_samples / dbc_diff;
-
-    if (!stream_info->num_channels_in_payload ||
-        stream_info->num_channels_in_payload != num_channels)
+    if (!stream_info->num_channels_in_payload)
     {
-      stream_info->num_channels_in_payload = num_channels;
       stream_info->chan_lock = 0;
       stream_info->rate = 0;
     }
@@ -112,7 +99,7 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
   {
     unsigned sample_num = 0;
     // register timestamp
-    for (int i=0; i<num_channels; i++)
+    for (int i=0; i<stream_info->num_channels_in_payload; i++)
     {
       if (map[i] >= 0)
       {
@@ -121,7 +108,7 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
     }
   }
 
-  for (i=0; i<num_channels; i++)
+  for (i=0; i<stream_info->num_channels_in_payload; i++)
   {
     if (map[i] >= 0)
     {
@@ -133,21 +120,14 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
   // now send the samples
   sample_ptr = (unsigned char *) &Buf[(avb_ethernet_hdr_size + AVB_TP_HDR_SIZE)];
 
-  num_channels_in_payload = stream_info->num_channels_in_payload;
+  int stride = stream_info->num_channels_in_payload;
 
-  stride = num_channels_in_payload;
-
-  num_channels =
-    num_channels < num_channels_in_payload ?
-    num_channels :
-    num_channels_in_payload;
-
-  for(i=0; i<num_channels; i++)
+  for(i=0; i<stream_info->num_channels_in_payload; i++)
   {
     if (map[i] >= 0)
     {
       audio_output_fifo_strided_push(h, map[i], (unsigned int *) sample_ptr,
-                                   stride, num_samples_in_payload);
+              stride, num_samples_in_payload);
     }
     sample_ptr += 4;
   }

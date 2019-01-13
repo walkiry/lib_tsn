@@ -59,22 +59,20 @@ static transaction configure_stream(chanend avb1722_tx_config,
 
   switch (rate)
   {
-  case 48000:  stream.ts_interval =  6; stream.samples_per_packet_base =  6; nsr = 0x5; break;
-  case 96000:  stream.ts_interval = 12; stream.samples_per_packet_base = 12; nsr = 0x7; break;
-  case 192000: stream.ts_interval = 24; stream.samples_per_packet_base = 24; nsr = 0x9; break;
+  case 48000:  stream.ts_interval =  6; stream.samples_per_packet =  6; nsr = 0x5; break;
+  case 96000:  stream.ts_interval = 12; stream.samples_per_packet = 12; nsr = 0x7; break;
+  case 192000: stream.ts_interval = 24; stream.samples_per_packet = 24; nsr = 0x9; break;
   default: __builtin_trap(); break;
   }
 
-  stream.format_specific = (0x2 << 24) | (nsr << 19) | (stream.num_channels << 8) | (32-1);
+  stream.subtype = 0x02;
 
-  stream.samples_per_packet_fractional = 0;
-  stream.rem = 0;
+  stream.format_specific = (0x2 << 24) | (nsr << 19) | (stream.num_channels << 8) | (32-1);
 
   stream.current_samples_in_packet = 0;
   stream.timestamp_valid = 0;
 
   stream.initial = 1;
-  stream.dbc_at_start_of_last_packet = 0;
   stream.active = 1;
   stream.sequence_number = 0;
 #if NUM_ETHERNET_PORTS > 1

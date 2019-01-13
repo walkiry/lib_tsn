@@ -101,6 +101,8 @@ void AVB1722_Talker_bufInit(unsigned char Buf0[],
     SET_AVBTP_STREAM_ID0(p1722Hdr, pStreamConfig->streamId[0]);
     SET_AVBTP_STREAM_ID1(p1722Hdr, pStreamConfig->streamId[1]);
 
+    SET_AVBTP_SUBTYPE(p1722Hdr, pStreamConfig->subtype);
+
     SET_AVBTP_FORMAT_SPECIFIC(p1722Hdr, pStreamConfig->format_specific);
 
 }
@@ -118,7 +120,7 @@ int avb1722_create_packet(unsigned char Buf0[],
     int stream_id0 = stream_info->streamId[0];
     unsigned int *map = stream_info->map;
     int total_samples_in_packet;
-    int samples_per_channel;
+    int num_samples_per_channel;
 
     // align packet 2 chars into the buffer so that samples are
     // word align for fast copying.
@@ -127,52 +129,37 @@ int avb1722_create_packet(unsigned char Buf0[],
 
     int stride = num_channels;
     unsigned ptp_ts = 0;
-    int dbc;
     int pkt_data_length;
 
     dest += (current_samples_in_packet * stride);
 
+    // TODO support other sampling rates
+    num_samples_per_channel = 6; // at 48kHz
+
     // Figure out the number of samples in the 1722 packet
-    samples_per_channel = stream_info->samples_per_packet_base;
+    int num_samples_in_payload = num_samples_per_channel * stream_info->num_channels;
 
-    if (stream_info->rem & 0xffff0000) {
-        samples_per_channel += 1;
-    }
-
-    // Find the DBC for the current stream
-    dbc = stream_info->dbc_at_start_of_last_packet;
-
-    for (int i = 0; i < num_channels; i++) {
-        unsigned sample = (frame->samples[map[i]] >> 8) | AVB1722_audioSampleType;
+    for (int i = 0; i < num_channels; i++)
+    {
+        unsigned sample = frame->samples[map[i]];
         sample = byterev(sample);
         *dest = sample;
         dest += 1;
     }
 
-    unsigned this_dbc = dbc + current_samples_in_packet;
-    unsigned int ts_this_dbc = ((this_dbc & (stream_info->ts_interval-1)) == 0);
-
-    if (ts_this_dbc) {
-        timestamp_valid = 1;
-        presentation_time = frame->timestamp;
-    }
+    timestamp_valid = 1;
+    presentation_time = frame->timestamp;
 
     current_samples_in_packet++;
 
     // samples_per_channel is the number of times we need to call this function
     // i.e. the number of audio frames we need to iterate through to get a full packet worth of samples
-    if (current_samples_in_packet == samples_per_channel) {
-        stream_info->rem += stream_info->samples_per_packet_fractional;
-        if (samples_per_channel > stream_info->samples_per_packet_base) {
-            stream_info->rem &= 0xffff;
-        }
+    if (current_samples_in_packet == num_samples_per_channel)
+    {
 
-        total_samples_in_packet = samples_per_channel * num_channels;
+        total_samples_in_packet = num_samples_per_channel * num_channels;
 
         pkt_data_length = total_samples_in_packet << 2;
-
-        dbc += samples_per_channel;
-        stream_info->dbc_at_start_of_last_packet = dbc;
 
         // perform required updates to header
         if (timestamp_valid) {

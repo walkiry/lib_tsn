@@ -144,7 +144,7 @@ typedef struct
 // Usgae:
 // 1. "x" in following macros are pointer to valid AVBTP_FrameHeader.
 // 2. "a" is the value in HOST byte order to set.
-#define SET_AVBTP_SUBTYPE(x, a)           ((x)->subtype |= ((a))
+#define SET_AVBTP_SUBTYPE(x, a)           ((x)->subtype |= ((a)))
 #define SET_AVBTP_SV(x, a)                ((x)->version_flags |= ((a) & 0x1) << 7)
 #define SET_AVBTP_VERSION(x, a)           ((x)->version_flags |= ((a) & 0x7) << 4)
 #define SET_AVBTP_MR(x, a)                ((x)->version_flags |= ((a) & 0x1) << 3)

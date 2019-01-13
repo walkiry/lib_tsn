@@ -66,6 +66,8 @@ typedef struct avb1722_Talker_StreamConfig_t
   char sequence_number;
   //! format specific field for aaf
   unsigned int format_specific;
+  //! 1722 subytype e.g. AAF
+  char subtype;
 } avb1722_Talker_StreamConfig_t;
 
 

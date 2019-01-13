@@ -33,9 +33,8 @@ typedef struct avb_1722_stream_info_t {
   short state;                     //!< Generic state info
   int chan_lock;                   //!< Counter for locking onto a data stream
   int rate;                        //!< The estimated rate of the audio traffic
-  int prev_num_samples;            //!< Number of samples in last received 1722 packet
   int num_channels_in_payload;     //!< The number of channels in the 1722 payloads
-  int num_channels;
+  int num_channels;                //!< The number of expected channels in the 1722 payload
   int last_sequence;               //!< The sequence number from the last 1722 packet
   audio_output_fifo_t map[AVB_MAX_CHANNELS_PER_LISTENER_STREAM];
 } avb_1722_stream_info_t;
