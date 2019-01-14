@@ -45,7 +45,7 @@ static transaction configure_stream(chanend c,
 
 	s.active = 1;
 	s.state = 0;
-	s.num_channels_in_payload = 0;
+	s.num_channels_in_payload = 8;
 	s.chan_lock = 0;
 }
 

@@ -67,7 +67,7 @@ static transaction configure_stream(chanend avb1722_tx_config,
 
   stream.subtype = 0x02;
 
-  stream.format_specific = (0x2 << 24) | (nsr << 19) | (stream.num_channels << 8) | (32-1);
+  stream.format_specific = (0x2 << 24) | (nsr << 20) | (stream.num_channels << 8) | (32-1);
 
   stream.current_samples_in_packet = 0;
   stream.timestamp_valid = 0;
