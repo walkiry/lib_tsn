@@ -97,16 +97,20 @@ void AVB1722_Talker_bufInit(unsigned char Buf0[],
 
     // 2. Initialise the AVB TP layer.
     // NOTE: Since the data structure is cleared before we only set the requird bits.
+    SET_AVBTP_SUBTYPE(p1722Hdr, pStreamConfig->subtype);
     SET_AVBTP_SV(p1722Hdr, 1); // set stream ID to valid.
     SET_AVBTP_STREAM_ID0(p1722Hdr, pStreamConfig->streamId[0]);
     SET_AVBTP_STREAM_ID1(p1722Hdr, pStreamConfig->streamId[1]);
-
-    SET_AVBTP_SUBTYPE(p1722Hdr, pStreamConfig->subtype);
-
     SET_AVBTP_FORMAT_SPECIFIC(p1722Hdr, pStreamConfig->format_specific);
-
+    SET_AVBTP_PACKET_INFO(p1722Hdr, pStreamConfig->packet_info);
 }
 
+/**
+ * Adds one frame to the packet
+ *
+ * returns zero as long as the packet is not ready
+ * returns packet size, when packet is ready. (Number of frames is derived from the sampling rate.)
+ */
 int avb1722_create_packet(unsigned char Buf0[],
         avb1722_Talker_StreamConfig_t *stream_info,
         ptp_time_info_mod64 *timeInfo,
@@ -116,11 +120,11 @@ int avb1722_create_packet(unsigned char Buf0[],
     unsigned int presentation_time = stream_info->timestamp;
     int timestamp_valid = stream_info->timestamp_valid;
     int num_channels = stream_info->num_channels;
-    int current_samples_in_packet = stream_info->current_samples_in_packet;
+    int current_frames_in_packet = stream_info->current_frames_in_packet;
     int stream_id0 = stream_info->streamId[0];
     unsigned int *map = stream_info->map;
     int total_samples_in_packet;
-    int num_samples_per_channel;
+    int num_frames_per_packet = stream_info->frames_per_packet;
 
     // align packet 2 chars into the buffer so that samples are
     // word align for fast copying.
@@ -131,13 +135,7 @@ int avb1722_create_packet(unsigned char Buf0[],
     unsigned ptp_ts = 0;
     int pkt_data_length;
 
-    dest += (current_samples_in_packet * stride);
-
-    // TODO support other sampling rates
-    num_samples_per_channel = 6; // at 48kHz
-
-    // Figure out the number of samples in the 1722 packet
-    int num_samples_in_payload = num_samples_per_channel * stream_info->num_channels;
+    dest += (current_frames_in_packet * stride);
 
     for (int i = 0; i < num_channels; i++)
     {
@@ -150,14 +148,14 @@ int avb1722_create_packet(unsigned char Buf0[],
     timestamp_valid = 1;
     presentation_time = frame->timestamp;
 
-    current_samples_in_packet++;
+    current_frames_in_packet++;
 
     // samples_per_channel is the number of times we need to call this function
     // i.e. the number of audio frames we need to iterate through to get a full packet worth of samples
-    if (current_samples_in_packet == num_samples_per_channel)
+    if (current_frames_in_packet == num_frames_per_packet)
     {
 
-        total_samples_in_packet = num_samples_per_channel * num_channels;
+        total_samples_in_packet = num_frames_per_packet * num_channels;
 
         pkt_data_length = total_samples_in_packet << 2;
 
@@ -171,14 +169,14 @@ int avb1722_create_packet(unsigned char Buf0[],
         AVB1722_AVBTP_HeaderGen(Buf, timestamp_valid, ptp_ts, stream_info->sequence_number, stream_id0);
 
         stream_info->sequence_number++;
-        stream_info->current_samples_in_packet = 0;
+        stream_info->current_frames_in_packet = 0;
         stream_info->timestamp_valid = 0;
         return (AVB_ETHERNET_HDR_SIZE + AVB_TP_HDR_SIZE + pkt_data_length);
     }
 
     stream_info->timestamp_valid = timestamp_valid;
     stream_info->timestamp = presentation_time;
-    stream_info->current_samples_in_packet = current_samples_in_packet;
+    stream_info->current_frames_in_packet = current_frames_in_packet;
 
     return 0;
 }

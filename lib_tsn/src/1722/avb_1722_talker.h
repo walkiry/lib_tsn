@@ -43,8 +43,8 @@ typedef struct avb1722_Talker_StreamConfig_t
   unsigned int fifo_mask;
   //! the type of samples in the stream
   unsigned int sampleType;
-
-  unsigned int current_samples_in_packet;
+  //! the current number of frames in the packet (the packet is send, when frames_per_packet is reached).
+  unsigned int current_frames_in_packet;
 
   unsigned int timestamp_valid;
 
@@ -52,8 +52,8 @@ typedef struct avb1722_Talker_StreamConfig_t
 
   //! Number of samples per packet in the audio fifo
   unsigned int ts_interval;
-  //! Number of samples per 1722 packet
-  unsigned int samples_per_packet;
+  //! Number of frames per 1722 packet (or number of samples per channel)
+  unsigned int frames_per_packet;
   //! a flag, true when the stream has just been initialised
   unsigned int initial;
   //! the delay in ms that is added to the current PTP time
@@ -66,6 +66,8 @@ typedef struct avb1722_Talker_StreamConfig_t
   char sequence_number;
   //! format specific field for aaf
   unsigned int format_specific;
+  //! format specific field for aaf
+  unsigned int packet_info;
   //! 1722 subytype e.g. AAF
   char subtype;
 } avb1722_Talker_StreamConfig_t;

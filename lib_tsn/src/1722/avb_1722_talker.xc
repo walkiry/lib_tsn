@@ -59,9 +59,9 @@ static transaction configure_stream(chanend avb1722_tx_config,
 
   switch (rate)
   {
-  case 48000:  stream.ts_interval =  6; stream.samples_per_packet =  6; nsr = 0x5; break;
-  case 96000:  stream.ts_interval = 12; stream.samples_per_packet = 12; nsr = 0x7; break;
-  case 192000: stream.ts_interval = 24; stream.samples_per_packet = 24; nsr = 0x9; break;
+  case 48000:  stream.ts_interval =  6; stream.frames_per_packet =  6; nsr = 0x5; break;
+  case 96000:  stream.ts_interval = 12; stream.frames_per_packet = 12; nsr = 0x7; break;
+  case 192000: stream.ts_interval = 24; stream.frames_per_packet = 24; nsr = 0x9; break;
   default: __builtin_trap(); break;
   }
 
@@ -69,7 +69,11 @@ static transaction configure_stream(chanend avb1722_tx_config,
 
   stream.format_specific = (0x2 << 24) | (nsr << 20) | (stream.num_channels << 8) | (32-1);
 
-  stream.current_samples_in_packet = 0;
+  unsigned int stream_data_length = 4 * stream.num_channels * stream.frames_per_packet;
+
+  stream.packet_info = stream_data_length << 16;
+
+  stream.current_frames_in_packet = 0;
   stream.timestamp_valid = 0;
 
   stream.initial = 1;
@@ -209,22 +213,29 @@ unsafe void avb_1722_talker_send_packets(streaming chanend c_eth_tx_hp,
   audio_frame_t * unsafe frame = (audio_frame_t *)&p_buffer->buffer[rd_buf];
 
   if (st.max_active_avb_stream != -1) {
-    for (int i=0; i < (st.max_active_avb_stream+1); i++) {
+    for (int i=0; i < (st.max_active_avb_stream+1); i++)
+    {
       if (st.talker_streams[i].active==2) { // TODO: Replace int with enum
         int packet_size = avb1722_create_packet((st.tx_buf[i], unsigned char[]),
                                                 st.talker_streams[i],
                                                 timeInfo,
                                                 frame, i);
-        if (!st.tx_buf_fill_size[i]) st.tx_buf_fill_size[i] = packet_size;
+        if (!st.tx_buf_fill_size[i])
+        {
+          st.tx_buf_fill_size[i] = packet_size;
+        }
       }
-      if (i == st.max_active_avb_stream) {
+      if (i == st.max_active_avb_stream)
+      {
         p_buffer->data_ready = 0;
       }
     }
 
-    for (int i=0; i < (st.max_active_avb_stream+1); i++) {
+    for (int i=0; i < (st.max_active_avb_stream+1); i++)
+    {
       int packet_size = st.tx_buf_fill_size[i];
-      if (packet_size) {
+      if (packet_size)
+      {
         ethernet_send_hp_packet(c_eth_tx_hp, &(st.tx_buf[i], unsigned char[])[2], packet_size, ETHERNET_ALL_INTERFACES);
         st.tx_buf_fill_size[i] = 0;
         st.counters.sent_1722++;

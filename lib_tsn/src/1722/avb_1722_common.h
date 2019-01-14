@@ -108,6 +108,11 @@ typedef struct
                                    // bit 12-13: rsv
                                    // bit 13-23: channels_per_frame
                                    // bit 24-31: bit-depth - 1
+  unsigned char packet_info[4];    // bit 0-7: reserved
+                                   // bit 8-11: evt
+                                   // bit 12: sp
+                                   // bit 13-15: rsv
+                                   // bit 16-31: stream data length (octets)
 } AVB_DataHeader_t;
 
 
@@ -138,6 +143,10 @@ typedef struct
                                         (x->format_specific[1] << 16) | \
                                         (x->format_specific[2] << 8) | \
                                         (x->format_specific[3]))
+#define AVBTP_PACKET_INFO(x)           ((x->packet_info[0] << 24) | \
+                                        (x->packet_info[1] << 16) | \
+                                        (x->packet_info[2] << 8) | \
+                                        (x->packet_info[3]))
 
 
 // Macros to set the AVBTP transport layer.
@@ -158,6 +167,10 @@ typedef struct
                                                 (x)->format_specific[1] = ((a) >> 16)& 0xFF; \
                                                 (x)->format_specific[2] = ((a) >> 8)& 0xFF; \
                                                 (x)->format_specific[3] = ((a) >> 0)& 0xFF; } while (0)
+#define SET_AVBTP_PACKET_INFO(x, a)       do {  (x)->packet_info[0] = ((a) >> 24)& 0xFF; \
+                                                (x)->packet_info[1] = ((a) >> 16)& 0xFF; \
+                                                (x)->packet_info[2] = ((a) >> 8)& 0xFF; \
+                                                (x)->packet_info[3] = ((a) >> 0)& 0xFF; } while (0)
 
 // constants.
 #define AVBTP_CD_DATA      (0)
