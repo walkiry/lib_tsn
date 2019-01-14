@@ -171,7 +171,7 @@ audio_output_fifo_strided_push(buffer_handle_t s0,
     sample = __builtin_bswap32(sample);
     sample_ptr += stride;
 
-#ifndef AVB_1722_FORMAT_SAF
+#ifdef AVB_1722_FORMAT_AM824
     sample = sample << 8;
 #endif
 

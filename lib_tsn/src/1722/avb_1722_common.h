@@ -43,7 +43,7 @@ static inline void hton_32_inline(unsigned char x[4], unsigned int v) {
                                 x[i+3] = (v); } while (0)
 
 // Frame Header size in bytes definations.
-#define AVB_ETHERNET_HDR_SIZE    (18)
+#define AVB_ETHERNET_HDR_SIZE    (18) // alt. 14
 #define AVB_TP_HDR_SIZE          (24)
 
 // number of bytes in MAC address
@@ -147,7 +147,6 @@ typedef struct
                                         (x->packet_info[1] << 16) | \
                                         (x->packet_info[2] << 8) | \
                                         (x->packet_info[3]))
-
 
 // Macros to set the AVBTP transport layer.
 // Usgae:
