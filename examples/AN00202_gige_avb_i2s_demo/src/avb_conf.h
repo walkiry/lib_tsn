@@ -35,9 +35,9 @@
 #define AVB_MAX_CHANNELS_PER_LISTENER_STREAM 8
 
 /** Use 61883-6 audio format for 1722 streams */
-//#define AVB_1722_FORMAT_61883_6 1
+#define AVB_1722_FORMAT_61883_6 1
 /** Use AAF audio format for 1722 streams */
-#define AVB_1722_FORMAT_AAF 1
+//#define AVB_1722_FORMAT_AAF 1
 
 /** The number of components in the endpoint that will register and initialize media FIFOs
     (typically an audio interface component such as I2S). */
