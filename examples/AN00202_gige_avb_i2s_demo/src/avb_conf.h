@@ -35,7 +35,9 @@
 #define AVB_MAX_CHANNELS_PER_LISTENER_STREAM 8
 
 /** Use 61883-6 audio format for 1722 streams */
-#define AVB_1722_FORMAT_61883_6 1
+//#define AVB_1722_FORMAT_61883_6 1
+/** Use AAF audio format for 1722 streams */
+#define AVB_1722_FORMAT_AAF 1
 
 /** The number of components in the endpoint that will register and initialize media FIFOs
     (typically an audio interface component such as I2S). */
@@ -57,11 +59,11 @@
 #define AVB_ENABLE_1722_1 1
 /** The entity capability flags as reported by 1722.1 ADP */
 #define AVB_1722_1_ADP_ENTITY_CAPABILITIES (AVB_1722_1_ADP_ENTITY_CAPABILITIES_AEM_SUPPORTED| \
-                                          AVB_1722_1_ADP_ENTITY_CAPABILITIES_CLASS_A_SUPPORTED| \
-                                          AVB_1722_1_ADP_ENTITY_CAPABILITIES_GPTP_SUPPORTED| \
-                                          AVB_1722_1_ADP_ENTITY_CAPABILITIES_EFU_MODE| \
-                                          AVB_1722_1_ADP_ENTITY_CAPABILITIES_ADDRESS_ACCESS_SUPPORTED| \
-                                          AVB_1722_1_ADP_ENTITY_CAPABILITIES_AEM_IDENTIFY_CONTROL_INDEX_VALID)
+                                            AVB_1722_1_ADP_ENTITY_CAPABILITIES_CLASS_A_SUPPORTED| \
+                                            AVB_1722_1_ADP_ENTITY_CAPABILITIES_GPTP_SUPPORTED| \
+                                            AVB_1722_1_ADP_ENTITY_CAPABILITIES_EFU_MODE| \
+                                            AVB_1722_1_ADP_ENTITY_CAPABILITIES_ADDRESS_ACCESS_SUPPORTED| \
+                                            AVB_1722_1_ADP_ENTITY_CAPABILITIES_AEM_IDENTIFY_CONTROL_INDEX_VALID)
 
 /** The model ID of the device as reported by 1722.1 ADP and AEM */
 #define AVB_1722_1_ADP_MODEL_ID 0x1234
@@ -71,7 +73,7 @@ enum aem_control_indices {
     DESCRIPTOR_INDEX_CONTROL_IDENTIFY = 0,
 };
 /** Enable 1722.1 Entity Firmware Update functionality on the entity. */
-#define AVB_1722_1_FIRMWARE_UPGRADE_ENABLED 1
+#define AVB_1722_1_FIRMWARE_UPGRADE_ENABLED 0
 /** Enable 1722.1 ACMP fast connect functionality on the entity. */
 #define AVB_1722_1_FAST_CONNECT_ENABLED 0
 /** Enable 1722.1 Controller functionality on the entity. */
