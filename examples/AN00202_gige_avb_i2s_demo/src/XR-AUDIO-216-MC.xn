@@ -20,7 +20,7 @@
           </Tile>
           <Tile Number="1" Reference="tile[1]"/>
         </Node>
-        <Node Id="1" InPackageId="1" Type="periph:XS1-SU" Reference="usb_tile" Oscillator="25MHz">
+        <Node Id="1" InPackageId="1" Type="periph:XS1-SU" Reference="usb_tile" Oscillator="24MHz">
         </Node>
       </Nodes>
       <Links>
@@ -45,13 +45,13 @@
     </Link>
   </Links>
   <ExternalDevices>
-    <Device NodeId="0" Tile="0" Class="SQIFlash" Name="bootFlash" Type="IS25LP080D">
-      <Attribute Name="PORT_SQI_CS" Value="PORT_SQI_CS"/>
-      <Attribute Name="PORT_SQI_SCLK"   Value="PORT_SQI_SCLK"/>
-      <Attribute Name="PORT_SQI_SIO"  Value="PORT_SQI_SIO"/>
-      <Attribute Name="QE_REGISTER" Value="quad_spi_qe_location_status_reg_0"/>
-  	  <Attribute Name="QE_BIT" Value="quad_spi_qe_bit_6"/>
-    </Device>
+	<Device NodeId="0" Tile="0" Class="SQIFlash" Name="bootFlash" Type="IS25LP080D">
+  		<Attribute Name="PORT_SQI_CS" Value="PORT_SQI_CS"/>
+  		<Attribute Name="PORT_SQI_SCLK"   Value="PORT_SQI_SCLK"/>
+  		<Attribute Name="PORT_SQI_SIO"  Value="PORT_SQI_SIO"/>
+  		<Attribute Name="QE_REGISTER" Value="quad_spi_qe_location_status_reg_0"/>
+  		<Attribute Name="QE_BIT" Value="quad_spi_qe_bit_6"/>
+	</Device>
   </ExternalDevices>
   <JTAGChain>
     <JTAGDevice NodeId="0"/>

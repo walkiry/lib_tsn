@@ -302,7 +302,7 @@ void ar8035_phy_driver(client interface smi_if smi,
   smi.write_reg(phy_address, 0x0D, 0x4003);
   smi.write_reg(phy_address, 0x0E, 0);
 
-  smi_configure(smi, phy_address, LINK_1000_MBPS_FULL_DUPLEX, SMI_ENABLE_AUTONEG);
+  smi_configure(smi, phy_address, LINK_100_MBPS_FULL_DUPLEX, SMI_ENABLE_AUTONEG);
   // Periodically check the link status
   while (1) {
     select {
@@ -489,7 +489,13 @@ int main(void)
     on tile[0]: {
       char mac_address[6];
       if (otp_board_info_get_mac(otp_ports0, 0, mac_address) == 0) {
-        fail("No MAC address programmed in OTP");
+        //fail("No MAC address programmed in OTP");
+        mac_address[0] = 0x01;
+        mac_address[1] = 0x00;
+        mac_address[2] = 0x0b;
+        mac_address[3] = 0x0b;
+        mac_address[4] = 0x0a;
+        mac_address[5] = 0x0f;
       }
       i_eth_cfg[MAC_CFG_TO_AVB_MANAGER].set_macaddr(0, mac_address);
       [[combine]]
