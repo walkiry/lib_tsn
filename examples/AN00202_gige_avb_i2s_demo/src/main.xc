@@ -150,14 +150,14 @@ void buffer_manager_to_i2s(server i2s_callback_if i2s,
        * bit[4:1] : DAC Pair Disable (DACx_DIS)  : All Dac Pairs enabled
        * bit[0] : Power Down (PDN)               : Powered down
        */
-      i2c.write_reg(CS4384_ADDR, CS4384_MODE_CTRL, 0b11000001);
+      //i2c.write_reg(CS4384_ADDR, CS4384_MODE_CTRL, 0b11000001);
 
       /* PCM Control (Address: 0x03) */
       /* bit[7:4] : Digital Interface Format (DIF) : 0b1100 for TDM
        * bit[3:2] : Reserved
        * bit[1:0] : Functional Mode (FM) : 0x11 for auto-speed detect (32 to 200kHz)
       */
-      i2c.write_reg(CS4384_ADDR, CS4384_PCM_CTRL, 0b00010111);
+      //i2c.write_reg(CS4384_ADDR, CS4384_PCM_CTRL, 0b00010111);
 
       /* Mode Control 1 (Address: 0x02) */
       /* bit[7] : Control Port Enable (CPEN)     : Set to 1 for enable
@@ -166,7 +166,7 @@ void buffer_manager_to_i2s(server i2s_callback_if i2s,
        * bit[4:1] : DAC Pair Disable (DACx_DIS)  : All Dac Pairs enabled
        * bit[0] : Power Down (PDN)               : Not powered down
        */
-      i2c.write_reg(CS4384_ADDR, CS4384_MODE_CTRL, 0b10000000);
+      //i2c.write_reg(CS4384_ADDR, CS4384_MODE_CTRL, 0b10000000);
 
       // Take ADC out of reset
       adc_reset.output(1);
@@ -181,7 +181,7 @@ void buffer_manager_to_i2s(server i2s_callback_if i2s,
        * Bit[3:2]: DIF[1:0]: Data Format: 0x01 for I2S, 0x02 for TDM
        * Bit[1:0]: MODE[1:0]: Mode: 0x11 for slave mode
        */
-      i2c.write_reg(CS5368_ADDR, CS5368_GCTL_MDE, 0b10010000 | (adc_dif << 2) | adc_mode);
+      //i2c.write_reg(CS5368_ADDR, CS5368_GCTL_MDE, 0b10010000 | (adc_dif << 2) | adc_mode);
 
       /* Reg 0x06: (PDN) Power Down Register */
       /* Bit[7:6]: Reserved
@@ -189,7 +189,7 @@ void buffer_manager_to_i2s(server i2s_callback_if i2s,
        * Bit[4]: PDM-OSC: Controls power to internal oscillator core
        * Bit[3:0]: PDN: When any bit is set all clocks going to that channel pair are turned off
        */
-      i2c.write_reg(CS5368_ADDR, CS5368_PWR_DN, 0b00000000);
+      //i2c.write_reg(CS5368_ADDR, CS5368_PWR_DN, 0b00000000);
 
       break;
 
@@ -264,7 +264,7 @@ void ar8035_phy_driver(client interface smi_if smi,
                 client interface ethernet_cfg_if eth,
                 streaming chanend c_sound_activity) {
   ethernet_link_state_t link_state = ETHERNET_LINK_DOWN;
-  ethernet_speed_t link_speed = LINK_1000_MBPS_FULL_DUPLEX;
+  ethernet_speed_t link_speed = LINK_100_MBPS_FULL_DUPLEX;
   const int phy_reset_delay_ms = 1;
   const int link_poll_period_ms = 1000;
   const int phy_address = 0x4;
@@ -490,13 +490,21 @@ int main(void)
       char mac_address[6];
       if (otp_board_info_get_mac(otp_ports0, 0, mac_address) == 0) {
         //fail("No MAC address programmed in OTP");
-        mac_address[0] = 0x01;
-        mac_address[1] = 0x00;
-        mac_address[2] = 0x0b;
-        mac_address[3] = 0x0b;
-        mac_address[4] = 0x0a;
-        mac_address[5] = 0x0f;
+        debug_printf("No MAC address programmed in OTP\n");
+        mac_address[0] = 0x0;
+        mac_address[1] = 0x22;
+        mac_address[2] = 0x97;
+        mac_address[3] = 0x80;
+        mac_address[4] = 0x0E;
+        mac_address[5] = 0xA2;
       }
+      debug_printf("MAC address %x:%x:%x:%x:%x:%x\n",
+              mac_address[0],
+              mac_address[1],
+              mac_address[2],
+              mac_address[3],
+              mac_address[4],
+              mac_address[5]);
       i_eth_cfg[MAC_CFG_TO_AVB_MANAGER].set_macaddr(0, mac_address);
       [[combine]]
       par {

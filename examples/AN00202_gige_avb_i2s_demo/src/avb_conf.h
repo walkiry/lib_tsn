@@ -48,7 +48,7 @@
 #define AVB_NUM_MEDIA_CLOCKS 1
 
 /** The maximum sample rate in Hz of audio that is to be input or output */
-#define AVB_MAX_AUDIO_SAMPLE_RATE 192000
+#define AVB_MAX_AUDIO_SAMPLE_RATE 48000
 
 /** Enable 1722 MAAP on the device, required for Talkers */
 #define AVB_ENABLE_1722_MAAP 1
