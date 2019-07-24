@@ -31,13 +31,4 @@ void audio_clock_CS2100CP_init(client interface i2c_master_if i2c)
     i2c_regop_res_t res;
     res = i2c.write_reg(deviceAddr, regaddr[i], data[0]);
   }
-
-#if 0
-  // read back for debugging
-  for(int i = 8; i >= 0; i--) {
-    i2c_regop_res_t res;
-    data[0] = i2c.read_reg(deviceAddr, regaddr[i], res);
-    debug_printf("%x %x\n", regaddr[i], data[0]);
-  }
-#endif
 }
