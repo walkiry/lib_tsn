@@ -208,22 +208,8 @@ void avb_1722_listener(streaming chanend c_eth_rx_hp,
   ethernet_packet_info_t packet_info;
   unsigned int rxbuf[(MAX_PKT_BUF_SIZE_LISTENER+3)/4];
 
-#if defined(AVB_1722_FORMAT_61883_4)
-  // Conditional due to compiler bug 11998.
-  unsigned t;
-  int pending_timeinfo = 0;
-  ptp_time_info_mod64 timeInfo;
-#endif
   set_thread_fast_mode_on();
   avb_1722_listener_init(c_listener_ctl, st, num_streams);
-
-#if defined(AVB_1722_FORMAT_61883_4)
-  // Conditional due to compiler bug 11998.
-  ptp_request_time_info_mod64(c_ptp);
-  ptp_get_requested_time_info_mod64(c_ptp, timeinfo);
-  tmr	:> t;
-  t+=TIMEINFO_UPDATE_INTERVAL;
-#endif
 
   buffer_handle_t h = audio_output_buf.get_handle();
 
@@ -232,18 +218,11 @@ void avb_1722_listener(streaming chanend c_eth_rx_hp,
 #pragma ordered
     select
       {
-#if !defined(AVB_1722_FORMAT_61883_4)
+#if defined(AVB_1722_FORMAT_AAF)
         // Conditional due to compiler bug 11998.
         // FIXME: stream_num variable is not the stream num, it is the FIFO!
       case c_buf_ctl :> int fifo_index:
           audio_output_fifo_handle_buf_ctl(c_buf_ctl, h, fifo_index, st.notified_buf_ctl, tmr);
-        break;
-#endif
-
-#if defined(AVB_1722_FORMAT_61883_4)
-        // The PTP server has sent new time information
-      case !isnull(c_ptp) => ptp_get_requested_time_info_mod64(c_ptp, timeInfo):
-        pending_timeinfo = 0;
         break;
 #endif
 
@@ -252,26 +231,9 @@ void avb_1722_listener(streaming chanend c_eth_rx_hp,
                                         packet_info,
                                         c_buf_ctl,
                                         st,
-                                        #ifdef AVB_1722_FORMAT_61883_4
-                                        timeInfo
-                                        #else
-                                        null
-                                        #endif
-                                        ,h);
+                                        null,
+                                        h);
         break;
-
-
-#if defined(AVB_1722_FORMAT_61883_4)
-        // Conditional due to compiler bug 11998
-        // Periodically ask the PTP server for new time information
-      case !isnull(c_ptp) => tmr when timerafter(t) :> t:
-        if (!pending_timeinfo) {
-          ptp_request_time_info_mod64(c_ptp);
-          pending_timeinfo = 1;
-        }
-        t+=TIMEINFO_UPDATE_INTERVAL;
-        break;
-#endif
 
       case avb_1722_listener_handle_cmd(c_listener_ctl, st, h):
         break;
