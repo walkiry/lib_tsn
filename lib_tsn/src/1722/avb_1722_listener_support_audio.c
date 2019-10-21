@@ -105,6 +105,7 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
   {
     unsigned sample_num = 0;
     // register timestamp
+    debug_printf("register timestamp %d\n", AVBTP_TIMESTAMP(pAVBHdr));
     for (int i=0; i<channels_per_frame; i++)
     {
       if (map[i] >= 0)
