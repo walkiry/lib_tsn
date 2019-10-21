@@ -86,11 +86,11 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
 
     stream_info->num_channels_in_payload = channels_per_frame;
 
-    debug_printf("Locked to AAF stream rate %d frames %d channels %d hdr_size %d\n",
-            stream_info->rate,
-            stream_info->frames_per_packet,
-            channels_per_frame,
-            avb_ethernet_hdr_size);
+    //debug_printf("Locked to AAF stream rate %d frames %d channels %d hdr_size %d\n",
+    //        stream_info->rate,
+    //        stream_info->frames_per_packet,
+    //        channels_per_frame,
+    //        avb_ethernet_hdr_size);
 
     return 0;
   }
@@ -108,9 +108,9 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
     unsigned sample_num = 0;
     // register timestamp
     //debug_printf("register timestamp %d\n", AVBTP_TIMESTAMP(pAVBHdr));
-    int diff = AVBTP_TIMESTAMP(pAVBHdr) - previous_ts;
-    previous_ts = AVBTP_TIMESTAMP(pAVBHdr);
-    debug_printf("timestamp diff %d\n", diff);
+    //int diff = AVBTP_TIMESTAMP(pAVBHdr) - previous_ts;
+    //previous_ts = AVBTP_TIMESTAMP(pAVBHdr);
+    //debug_printf("timestamp diff %d\n", diff);
     for (int i=0; i<channels_per_frame; i++)
     {
       if (map[i] >= 0)
@@ -134,7 +134,7 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
   int stride = channels_per_frame;
 
   int num_samples_in_payload = channels_per_frame * num_frames_per_packet;
-  debug_printf("num_samples_in_payload %d\n", num_samples_in_payload);
+  //debug_printf("num_samples_in_payload %d\n", num_samples_in_payload);
 
   for(i=0; i<channels_per_frame; i++)
   {
@@ -142,7 +142,7 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
     {
       audio_output_fifo_strided_push(h, map[i], (unsigned int *) sample_ptr,
               stride, num_samples_in_payload);
-      debug_printf("pushed channel %d with stride %d samples %d\n", i, stride, num_samples_in_payload);
+      //debug_printf("pushed channel %d with stride %d samples %d\n", i, stride, num_samples_in_payload);
     }
     sample_ptr += 4;
   }
