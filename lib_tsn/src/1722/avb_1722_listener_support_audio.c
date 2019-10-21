@@ -133,13 +133,16 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
 
   int stride = channels_per_frame;
 
+  int num_samples_in_payload = channels_per_frame * num_frames_per_packet;
+  debug_printf("num_samples_in_payload %d\n", num_samples_in_payload);
+
   for(i=0; i<channels_per_frame; i++)
   {
     if (map[i] >= 0)
     {
       audio_output_fifo_strided_push(h, map[i], (unsigned int *) sample_ptr,
-              stride, num_frames_per_packet);
-      debug_printf("pushed channel %d with stride %d samples %d\n", i, stride, num_frames_per_packet);
+              stride, num_samples_in_payload);
+      debug_printf("pushed channel %d with stride %d samples %d\n", i, stride, num_samples_in_payload);
     }
     sample_ptr += 4;
   }
