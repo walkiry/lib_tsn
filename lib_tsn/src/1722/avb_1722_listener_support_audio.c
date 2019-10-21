@@ -16,6 +16,8 @@
 static unsigned char prev_seq_num = 0;
 #endif
 
+static int previous_ts;
+
 int avb_1722_listener_process_packet(chanend buf_ctl,
                                      unsigned char Buf[],
                                      int numBytes,
@@ -105,7 +107,10 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
   {
     unsigned sample_num = 0;
     // register timestamp
-    debug_printf("register timestamp %d\n", AVBTP_TIMESTAMP(pAVBHdr));
+    //debug_printf("register timestamp %d\n", AVBTP_TIMESTAMP(pAVBHdr));
+    int diff = AVBTP_TIMESTAMP(pAVBHdr) - previous_ts;
+    previous_ts = AVBTP_TIMESTAMP(pAVBHdr);
+    debug_printf("timestamp diff %d\n", diff);
     for (int i=0; i<channels_per_frame; i++)
     {
       if (map[i] >= 0)
