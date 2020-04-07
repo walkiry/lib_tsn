@@ -33,7 +33,7 @@ int avb_1722_listener_process_crf_packet(chanend buf_ctl,
   audio_output_fifo_t *map = &stream_info->map[0];
 
   // TODO This is just a Hack to bring Timestamps to the correct buffer. Where is this to be configured correctly?
-  map[0] = 8;
+  map[i] = 8;
 
  // debug_printf("CRF packet processing... ts %d %d seq %d map %d\n", CRF_TIMESTAMP_HI(pCrfHdr), CRF_TIMESTAMP_LO(pCrfHdr), pCrfHdr->sequence_number, map[i]);
 
@@ -68,7 +68,7 @@ int avb_1722_listener_process_crf_packet(chanend buf_ctl,
 
 #if 1
 
-  // register tiemstamp
+  // register timestamp
   unsigned sample_num = 0;
   audio_output_fifo_set_ptp_timestamp(h, map[i], CRF_TIMESTAMP_LO(pCrfHdr), sample_num);
 
@@ -76,11 +76,10 @@ int avb_1722_listener_process_crf_packet(chanend buf_ctl,
   audio_output_fifo_maintain(h, map[i], buf_ctl, notified_buf_ctl);
 
   // now send the fake sample
-  unsigned int sample = 0;
+  unsigned char sampleBuf[96*4];
   int num_channels_in_payload = 1;
-  int num_samples_in_payload = 16;
-  audio_output_fifo_strided_push(h, map[i], &sample, num_channels_in_payload, num_samples_in_payload);
-
+  int num_samples_in_payload = 96; // 48000Hz/500Hz = sampling rate/crf rate
+  audio_output_fifo_strided_push(h, map[i], (unsigned int *) sampleBuf, num_channels_in_payload, num_samples_in_payload);
 
 #endif
   return(1);

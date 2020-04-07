@@ -243,7 +243,8 @@ unsigned int update_media_clock(chanend ptp_svr,
 			// and these for CS2100-CP PLL
 			// Note: Value is shifted multiplied by 25, divided by 2 and then shifted by 16 to get fractional baselength (We have 16 Fractional Bits!)
 			clock_info->wordlen = clock_info->wordlen - ((perror / diff_local) * 80)/11 - ((ierror / diff_local) * 1) / 5;
-#endif
+
+			#endif
 
 			debug_printf("new wordlen %d\n", clock_info->wordlen);
 
