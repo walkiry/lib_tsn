@@ -1,0 +1,21 @@
+title:
+crf master
+steps:
+configure DUT to use clock source internal
+configure REF to use clock source stream
+configure sampling rate on DUT to be 96k
+configure sampling rate in REF to be 96k
+connect CRF output from DUT to CRF input of REF
+result:
+not supported yet
+
+title:
+crf slave
+steps:
+configure DUT to use clock source stream
+configure REF to use clock source internal
+configure sampling rate on DUT to be 96k
+configure sampling rate in REF to be 96k
+connect CRF output from REF to CRF input of DUT
+result:
+not syncing
