@@ -10,13 +10,11 @@
 #include "default_avb_conf.h"
 #include "debug_print.h"
 
-#if defined(AVB_1722_FORMAT_AAF)
+#if defined(AVB_1722_FORMAT_SAF) || defined(AVB_1722_FORMAT_61883_6)
 
 #if AVB_1722_RECORD_ERRORS
 static unsigned char prev_seq_num = 0;
 #endif
-
-static int previous_ts;
 
 int avb_1722_listener_process_packet(chanend buf_ctl,
                                      unsigned char Buf[],
@@ -27,21 +25,30 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
                                      int *notified_buf_ctl,
                                      buffer_handle_t h)
 {
-  int pktDataLength;
+  int pktDataLength, dbc_value;
   AVB_DataHeader_t *pAVBHdr;
+  AVB_AVB1722_CIP_Header_t *pAVB1722Hdr;
   int avb_ethernet_hdr_size = (Buf[12]==0x81) ? 18 : 14;
-  int num_frames_per_packet = stream_info->frames_per_packet;
+  int num_samples_in_payload, num_channels_in_payload;
   pAVBHdr = (AVB_DataHeader_t *) &(Buf[avb_ethernet_hdr_size]);
+  pAVB1722Hdr = (AVB_AVB1722_CIP_Header_t *) &(Buf[avb_ethernet_hdr_size + AVB_TP_HDR_SIZE]);
   unsigned char *sample_ptr;
   int i;
+  int num_channels = stream_info->num_channels;
   audio_output_fifo_t *map = &stream_info->map[0];
+  int stride;
+  int dbc_diff;
 
   // sanity check on number bytes in payload
-  if (numBytes <= avb_ethernet_hdr_size + AVB_TP_HDR_SIZE)
+  if (numBytes <= avb_ethernet_hdr_size + AVB_TP_HDR_SIZE + AVB_CIP_HDR_SIZE)
   {
     return (0);
   }
   if (AVBTP_VERSION(pAVBHdr) != 0)
+  {
+    return (0);
+  }
+  if (AVBTP_CD(pAVBHdr) != AVBTP_CD_DATA)
   {
     return (0);
   }
@@ -58,60 +65,87 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
   prev_seq_num = seq_num;
 #endif
 
-  unsigned int channels_per_frame = ( AVBTP_FORMAT_SPECIFIC(pAVBHdr) >> 8 ) & 0x3ff;
+  dbc_value = (int) pAVB1722Hdr->DBC;
+  dbc_diff = dbc_value - stream_info->dbc;
+  stream_info->dbc = dbc_value;
+
+  if (dbc_diff < 0)
+    dbc_diff += 0x100;
+
+
+  pktDataLength = NTOH_U16(pAVBHdr->packet_data_length);
+  num_samples_in_payload = (pktDataLength-8)>>2;
+
+  int prev_num_samples = stream_info->prev_num_samples;
+  stream_info->prev_num_samples = num_samples_in_payload;
 
   if (stream_info->chan_lock < 16)
   {
+    int num_channels;
 
-    unsigned int nsr =  ( AVBTP_FORMAT_SPECIFIC(pAVBHdr) >> 20 ) & 0xf;
+    if (!prev_num_samples || dbc_diff == 0) {
+      return 0;
+    }
 
-    if (!channels_per_frame)
+    num_channels = prev_num_samples / dbc_diff;
+
+    if (!stream_info->num_channels_in_payload ||
+        stream_info->num_channels_in_payload != num_channels)
     {
+      stream_info->num_channels_in_payload = num_channels;
       stream_info->chan_lock = 0;
       stream_info->rate = 0;
     }
+
+    stream_info->rate += num_samples_in_payload;
 
     stream_info->chan_lock++;
 
     if (stream_info->chan_lock == 16)
     {
-      switch (nsr)
+      stream_info->rate = (stream_info->rate / stream_info->num_channels_in_payload / 16);
+
+      switch (stream_info->rate)
       {
-      case 0x5: stream_info->rate =  48000; stream_info->frames_per_packet =  6; break;
-      case 0x7: stream_info->rate =  96000; stream_info->frames_per_packet = 12; break;
-      case 0x9: stream_info->rate = 192000; stream_info->frames_per_packet = 24; break;
-      default:  stream_info->rate = 0; break;
+      case 1: stream_info->rate = 8000; break;
+      case 2: stream_info->rate = 16000; break;
+      case 4: stream_info->rate = 32000; break;
+      case 5: stream_info->rate = 44100; break;
+      case 6: stream_info->rate = 48000; break;
+      case 11: stream_info->rate = 88200; break;
+      case 12: stream_info->rate = 96000; break;
+      case 24: stream_info->rate = 192000; break;
+      default: stream_info->rate = 0; break;
       }
     }
-
-    stream_info->num_channels_in_payload = channels_per_frame;
-
-    //debug_printf("Locked to AAF stream rate %d frames %d channels %d hdr_size %d\n",
-    //        stream_info->rate,
-    //        stream_info->frames_per_packet,
-    //        channels_per_frame,
-    //        avb_ethernet_hdr_size);
 
     return 0;
   }
 
-  /*
-  if( channels_per_frame != stream_info->num_channels )
-  {
-      debug_printf("channels_per_frame mismatch!\n");
-      return 0;
-  }
-  */
-
   if ((AVBTP_TV(pAVBHdr)==1))
   {
-    unsigned sample_num = 0;
+    // See 61883-6 section 6.2 which explains that the receiver can calculate
+    // which data block (sample) the timestamp refers to using the formula:
+    //   index = (SYT_INTERVAL - dbc % SYT_INTERVAL) % SYT_INTERVAL
+
+    unsigned syt_interval = 0, sample_num = 0;
+
+    switch (stream_info->rate)
+    {
+    case 8000:   syt_interval = 1; break;
+    case 16000:  syt_interval = 2; break;
+    case 32000:  syt_interval = 8; break;
+    case 44100:  syt_interval = 8; break;
+    case 48000:  syt_interval = 8; break;
+    case 88200:  syt_interval = 16; break;
+    case 96000:  syt_interval = 16; break;
+    case 176400: syt_interval = 32; break;
+    case 192000: syt_interval = 32; break;
+    default: return 0; break;
+    }
+    sample_num = (syt_interval - (dbc_value & (syt_interval-1))) & (syt_interval-1);
     // register timestamp
-    //debug_printf("register timestamp %d\n", AVBTP_TIMESTAMP(pAVBHdr));
-    //int diff = AVBTP_TIMESTAMP(pAVBHdr) - previous_ts;
-    //previous_ts = AVBTP_TIMESTAMP(pAVBHdr);
-    //debug_printf("timestamp diff %d\n", diff);
-    for (int i=0; i<channels_per_frame; i++)
+    for (int i=0; i<num_channels; i++)
     {
       if (map[i] >= 0)
       {
@@ -120,7 +154,7 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
     }
   }
 
-  for (i=0; i<channels_per_frame; i++)
+  for (i=0; i<num_channels; i++)
   {
     if (map[i] >= 0)
     {
@@ -128,21 +162,27 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
     }
   }
 
+
   // now send the samples
-  sample_ptr = (unsigned char *) &Buf[(avb_ethernet_hdr_size + AVB_TP_HDR_SIZE)];
+  sample_ptr = (unsigned char *) &Buf[(avb_ethernet_hdr_size +
+                                       AVB_TP_HDR_SIZE +
+                                       AVB_CIP_HDR_SIZE)];
 
-  int stride = channels_per_frame;
+  num_channels_in_payload = stream_info->num_channels_in_payload;
 
-  int num_samples_in_payload = channels_per_frame * num_frames_per_packet;
-  //debug_printf("num_samples_in_payload %d\n", num_samples_in_payload);
+  stride = num_channels_in_payload;
 
-  for(i=0; i<channels_per_frame; i++)
+  num_channels =
+    num_channels < num_channels_in_payload ?
+    num_channels :
+    num_channels_in_payload;
+
+  for(i=0; i<num_channels; i++)
   {
     if (map[i] >= 0)
     {
       audio_output_fifo_strided_push(h, map[i], (unsigned int *) sample_ptr,
-              stride, num_samples_in_payload);
-      //debug_printf("pushed channel %d with stride %d samples %d\n", i, stride, num_samples_in_payload);
+                                   stride, num_samples_in_payload);
     }
     sample_ptr += 4;
   }
@@ -151,5 +191,3 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
 }
 
 #endif
-
-
