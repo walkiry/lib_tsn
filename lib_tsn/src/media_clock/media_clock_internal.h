@@ -34,7 +34,7 @@ typedef struct media_clock_t {
 #define WC_FRACTIONAL_BITS 16
 
 // The number of ticks between period clock recovery checks
-#define CLOCK_RECOVERY_PERIOD  (2<<21) // (1<<21) = 2.097.152 @ 100MHz = 20,97152ms
+#define CLOCK_RECOVERY_PERIOD  (1<<21) // (1<<21) = 2.097.152 @ 100MHz = 20,97152ms
 
 void init_media_clock_recovery(NULLABLE_RESOURCE(chanend,ptp_svr),
                                        int clock_info,

@@ -79,6 +79,7 @@ int avb_1722_listener_process_crf_packet(chanend buf_ctl,
   unsigned char sampleBuf[96*4];
   int num_channels_in_payload = 1;
   int num_samples_in_payload = 96; // 48000Hz/500Hz = sampling rate/crf rate
+  // TODO go with the right number of samples with respect for the current sampling rate of the system
   audio_output_fifo_strided_push(h, map[i], (unsigned int *) sampleBuf, num_channels_in_payload, num_samples_in_payload);
 
 #endif
