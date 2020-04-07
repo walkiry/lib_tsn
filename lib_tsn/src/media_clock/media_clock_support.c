@@ -155,7 +155,7 @@ unsigned int update_media_clock(chanend ptp_svr,
 		} else {
             //debug_printf("clock_info valid\n");
 
-#if 1
+#if 0
             // wordlen is in (XMOS-Timerticks per second) << 24
             // 20.83 us = 136533333 external wordlen << 8 >> 24 / 100
             debug_printf("external wordlen %d\n", local_wordlen_to_external_wordlen(clock_info->wordlen));
