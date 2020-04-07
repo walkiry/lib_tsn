@@ -135,7 +135,7 @@ void avb_1722_listener_handle_packet(unsigned int rxbuf[],
   if (stream_id < MAX_AVB_STREAMS_PER_LISTENER &&
       st.listener_streams[stream_id].active) {
     // process the current packet
-    avb_1722_listener_process_packet(c_buf_ctl,
+    avb_1722_listener_process_aaf_packet(c_buf_ctl,
                                      &(rxbuf, unsigned char[])[2],
                                      packet_info.len,
                                      st.listener_streams[stream_id],

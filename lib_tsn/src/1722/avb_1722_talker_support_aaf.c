@@ -25,7 +25,7 @@ unsigned int AVB1722_audioSampleType = AAF_32BIT;
  *  \param sequence_number the 1722 sequence number
  *  \param stream_id0 the bottom 32 bits of the stream id
  */
-static void AVB1722_AVBTP_HeaderGen(unsigned char Buf[],
+static void AVB1722_AAF_AVBTP_HeaderGen(unsigned char Buf[],
         int valid_ts,
         unsigned avbtp_ts,
         int sequence_number,
@@ -54,7 +54,7 @@ static void AVB1722_AVBTP_HeaderGen(unsigned char Buf[],
 /** This configure AVB Talker buffer for a given stream configuration.
  *  It updates the static portion of Ehternet/AVB transport layer headers.
  */
-void AVB1722_Talker_bufInit(unsigned char Buf0[],
+void AVB1722_AAF_Talker_bufInit(unsigned char Buf0[],
         avb1722_Talker_StreamConfig_t *pStreamConfig,
         int vlanid)
 {
@@ -111,7 +111,7 @@ void AVB1722_Talker_bufInit(unsigned char Buf0[],
  * returns zero as long as the packet is not ready
  * returns packet size, when packet is ready. (Number of frames is derived from the sampling rate.)
  */
-int avb1722_create_packet(unsigned char Buf0[],
+int avb1722_create_aaf_packet(unsigned char Buf0[],
         avb1722_Talker_StreamConfig_t *stream_info,
         ptp_time_info_mod64 *timeInfo,
         audio_frame_t *frame,
@@ -166,7 +166,7 @@ int avb1722_create_packet(unsigned char Buf0[],
         }
 
         // Update timestamp value and valid flag.
-        AVB1722_AVBTP_HeaderGen(Buf, timestamp_valid, ptp_ts, stream_info->sequence_number, stream_id0);
+        AVB1722_AAF_AVBTP_HeaderGen(Buf, timestamp_valid, ptp_ts, stream_info->sequence_number, stream_id0);
 
         stream_info->sequence_number++;
         stream_info->current_frames_in_packet = 0;

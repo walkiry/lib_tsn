@@ -147,7 +147,7 @@ void avb_1722_talker_handle_cmd(chanend c_talker_ctl,
         if (stream_num > st.max_active_avb_stream)
           st.max_active_avb_stream = stream_num;
 
-        AVB1722_Talker_bufInit((st.tx_buf[stream_num],unsigned char[]),
+        AVB1722_AAF_Talker_bufInit((st.tx_buf[stream_num],unsigned char[]),
                                st.talker_streams[stream_num],
                                st.vlan);
 
@@ -216,7 +216,7 @@ unsafe void avb_1722_talker_send_packets(streaming chanend c_eth_tx_hp,
     for (int i=0; i < (st.max_active_avb_stream+1); i++)
     {
       if (st.talker_streams[i].active==2) { // TODO: Replace int with enum
-        int packet_size = avb1722_create_packet((st.tx_buf[i], unsigned char[]),
+        int packet_size = avb1722_create_aaf_packet((st.tx_buf[i], unsigned char[]),
                                                 st.talker_streams[i],
                                                 timeInfo,
                                                 frame, i);

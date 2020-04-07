@@ -18,7 +18,7 @@ static unsigned char prev_seq_num = 0;
 
 static int previous_ts;
 
-int avb_1722_listener_process_packet(chanend buf_ctl,
+int avb_1722_listener_process_aaf_packet(chanend buf_ctl,
                                      unsigned char Buf[],
                                      int numBytes,
                                      avb_1722_stream_info_t *stream_info,

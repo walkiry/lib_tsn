@@ -86,6 +86,14 @@ void AVB1722_Talker_bufInit(unsigned char Buf[],
                                             pStreamConfig),
                             int vlan_id);
 
+/** This configure AVB Talker buffer for a given stream configuration.
+ *  It updates the static portion of Ehternet/AVB transport layer headers.
+ */
+void AVB1722_AAF_Talker_bufInit(unsigned char Buf[],
+                            REFERENCE_PARAM(avb1722_Talker_StreamConfig_t,
+                                            pStreamConfig),
+                            int vlan_id);
+
 /** This receives user defined audio samples from local out stream and packetize
  *  them into specified AVB1722 transport packet.
  */
@@ -93,6 +101,13 @@ void AVB1722_Talker_bufInit(unsigned char Buf[],
 extern "C" {
 #endif
 int avb1722_create_packet(unsigned char Buf[],
+                          REFERENCE_PARAM(avb1722_Talker_StreamConfig_t,
+                                          stream_info),
+                          REFERENCE_PARAM(ptp_time_info_mod64,
+                                          timeInfo),
+                          audio_frame_t *frame,
+                          int stream);
+int avb1722_create_aaf_packet(unsigned char Buf[],
                           REFERENCE_PARAM(avb1722_Talker_StreamConfig_t,
                                           stream_info),
                           REFERENCE_PARAM(ptp_time_info_mod64,
