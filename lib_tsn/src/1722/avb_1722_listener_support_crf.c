@@ -78,7 +78,7 @@ int avb_1722_listener_process_crf_packet(chanend buf_ctl,
   // now send the fake sample
   unsigned int sample = 0;
   int num_channels_in_payload = 1;
-  int num_samples_in_payload = 1;
+  int num_samples_in_payload = 16;
   audio_output_fifo_strided_push(h, map[i], &sample, num_channels_in_payload, num_samples_in_payload);
 
 

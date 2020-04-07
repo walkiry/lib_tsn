@@ -333,6 +333,8 @@ static void update_media_clocks(chanend ?ptp_svr, int clk_time)
                            CLOCK_RECOVERY_PERIOD);
 
       update_media_clock_divide(media_clocks[i]);
+    } else {
+        debug_printf("media clock %d is not active", i);
     }
   }
 }

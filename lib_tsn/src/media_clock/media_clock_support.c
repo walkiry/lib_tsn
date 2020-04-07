@@ -24,7 +24,7 @@ typedef struct stream_info_t {
 	int valid;
 	unsigned int local_ts;
 	unsigned int outgoing_ptp_ts;
-	unsigned int presentation_ts;
+	unsigned int presentation_ts;   // this should be the unmodified ptp timestamp from the audio or clock stream packets
 	int locked;
 	int fill;
 } stream_info_t;
@@ -120,7 +120,7 @@ unsigned int update_media_clock(chanend ptp_svr,
 
 	switch (clock_type) {
 	case DEVICE_MEDIA_CLOCK_LOCAL_CLOCK:
-	    //debug_printf("DEVICE_MEDIA_CLOCK_LOCAL_CLOCK\n");
+	    debug_printf("DEVICE_MEDIA_CLOCK_LOCAL_CLOCK\n");
 		return local_wordlen_to_external_wordlen(clock_info->wordlen);
 		break;
 
@@ -130,13 +130,13 @@ unsigned int update_media_clock(chanend ptp_svr,
 
 		// If the stream info isn't valid at all, then return the default clock rate
 		if (!clock_info->stream_info2.valid) {
-		    //debug_printf("Stream info 2 not valid\n");
+		    debug_printf("Stream info 2 not valid\n");
 			return local_wordlen_to_external_wordlen(clock_info->wordlen);
 		}
 
 		// If there are not two stream infos to compare, then return default clock rate
 		if (!clock_info->stream_info1.valid) {
-            //debug_printf("Stream info 1 not valid\n");
+            debug_printf("Stream info 1 not valid\n");
 			clock_info->stream_info1 = clock_info->stream_info2;
 			clock_info->stream_info2.valid = 0;
 			return local_wordlen_to_external_wordlen(clock_info->wordlen);
@@ -144,25 +144,26 @@ unsigned int update_media_clock(chanend ptp_svr,
 
 		// If the stream is unlocked, return the default clock rate
 		if (!clock_info->stream_info2.locked) {
-            //debug_printf("Stream unlocked\n");
+            debug_printf("Stream unlocked\n");
 			clock_info->wordlen = calculate_wordlen(clock_info->rate);
 			clock_info->stream_info1 = clock_info->stream_info2;
 			clock_info->stream_info2.valid = 0;
 			clock_info->first = 1;
 			clock_info->ierror = 0;
-
 		// We have all the info we need to perform clock recovery
 		} else {
             //debug_printf("clock_info valid\n");
 
-#if 0
+
             // wordlen is in (XMOS-Timerticks per second) << 24
-            // 20.83 us = 136533333 external wordlen << 8 >> 24 / 100
-            debug_printf("external wordlen %d\n", local_wordlen_to_external_wordlen(clock_info->wordlen));
+            // 20.83 ms = 136533333 external wordlen << 8 >> 24 / 100 = 1000 * sample period at 48kHz
+            debug_printf("external wordlen %x\n", local_wordlen_to_external_wordlen(clock_info->wordlen));
 
-            //debug_printf("%d %d\n", clock_info->stream_info1.presentation_ts, clock_info->stream_info2.presentation_ts);
+            debug_printf("outgoing_ptp_ts %x %x\n", (unsigned int)clock_info->stream_info1.outgoing_ptp_ts, (unsigned int)clock_info->stream_info2.outgoing_ptp_ts);
 
-            // Calcualte difference of current and previous timestamp
+            debug_printf("presentation timestamps %x %x\n", (unsigned int)clock_info->stream_info1.presentation_ts, (unsigned int)clock_info->stream_info2.presentation_ts);
+
+            // Calcualte difference of current and previous timestamp --> 21000102 ns = 21.00 ms
             unsigned int diff_presentation = clock_info->stream_info2.presentation_ts
                     - clock_info->stream_info1.presentation_ts;
 
@@ -177,7 +178,9 @@ unsigned int update_media_clock(chanend ptp_svr,
                     - clock_info->stream_info1.local_ts;
 
             //debug_printf("stream_info2.local_ts %d stream_info1.local_ts %d diff_local %d\n", clock_info->stream_info2.local_ts, clock_info->stream_info1.local_ts, diff_local);
-            debug_printf("diff_local %d\n",  diff_local);
+            debug_printf("diff_local %d us/100\n",  diff_local);
+
+#if 0
 
             // This is ptp time in ns!
             ierror = (signed) clock_info->stream_info2.outgoing_ptp_ts -
@@ -185,7 +188,7 @@ unsigned int update_media_clock(chanend ptp_svr,
 
             debug_printf("ierror %d ns\n",ierror);
 
-            ierror = ierror << WORDLEN_FRACTIONAL_BITS;
+            //ierror = ierror << WORDLEN_FRACTIONAL_BITS;
 
             if (clock_info->first) {
                 perror = 0;
@@ -197,6 +200,8 @@ unsigned int update_media_clock(chanend ptp_svr,
 
             debug_printf("perror %d\n",perror);
 
+            //clock_info->wordlen = clock_info->wordlen - ((perror / diff_local) * 80)/11 - ((ierror / diff_local) * 1) / 5;
+            //clock_info->wordlen = clock_info->wordlen - ierror / diff_local;
 
 
             // save
