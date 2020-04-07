@@ -242,13 +242,13 @@ unsigned int update_media_clock(chanend ptp_svr,
 			debug_printf("old wordlen %d\n", clock_info->wordlen);
 			// and these for CS2100-CP PLL
 			// Note: Value is shifted multiplied by 25, divided by 2 and then shifted by 16 to get fractional baselength (We have 16 Fractional Bits!)
-//			clock_info->wordlen = clock_info->wordlen - ((perror / diff_local) * 80)/11 - ((ierror / diff_local) * 1) / 5; // this is working for am824
+			clock_info->wordlen = clock_info->wordlen - ((perror / diff_local) * 80)/11 - ((ierror / diff_local) * 1) / 5; // this is working for am824
 //			clock_info->wordlen = clock_info->wordlen - ((perror / diff_local) * 1)/11 - ((ierror / diff_local) * 1) / 1; // no effect
 //          clock_info->wordlen = clock_info->wordlen - ((perror / diff_local) * 1)/11 - ((ierror / diff_local) * 5) / 5; // no effect
 //          clock_info->wordlen = clock_info->wordlen - ((perror / diff_local) * 8)/11 - ((ierror / diff_local) * 1) / 5; // oscillating, but not running completly away
 //			clock_info->wordlen = clock_info->wordlen - ((perror / diff_local) * 1)/11 - ((ierror / diff_local) * 1) / 5; // more oscillation
 //			clock_info->wordlen = clock_info->wordlen - ((perror / diff_local) * 40)/11 - ((ierror / diff_local) * 1) / 5; // ends with drifting
-            clock_info->wordlen = clock_info->wordlen - ((perror / diff_local) * 20)/11 - ((ierror / diff_local) * 1) / 5; //
+//            clock_info->wordlen = clock_info->wordlen - ((perror / diff_local) * 20)/11 - ((ierror / diff_local) * 1) / 5; //
 
 
 			#endif

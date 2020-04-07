@@ -8,7 +8,7 @@
 #include "debug_print.h"
 
 #define OUTPUT_DURING_LOCK 0
-#define NOTIFICATION_PERIOD 4000 //250
+#define NOTIFICATION_PERIOD 250 // num samples vefore we send the notification
 
 // Volume is represented as a 2.30 signed fixed point number.
 //    SIFFFFFF.FFFFFFFF.FFFFFFFF.FFFFFFFF
