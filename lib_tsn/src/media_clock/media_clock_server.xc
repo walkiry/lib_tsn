@@ -56,12 +56,10 @@ void update_stream_derived_clocks(int source_num,
                                   int fill)
 {
   for (int i=0;i<AVB_NUM_MEDIA_CLOCKS;i++) {
-    //debug_printf("update_stream_derived_clocks %d %d\n", media_clocks[i].info.source, source_num);
     if (media_clocks[i].info.active &&
         media_clocks[i].info.clock_type == DEVICE_MEDIA_CLOCK_INPUT_STREAM_DERIVED &&
         media_clocks[i].info.source == source_num)
       {
-        debug_printf("update_stream_derived_clocks %d %d\n", media_clocks[i].info.source, source_num);
         update_media_clock_stream_info(i,
                                        local_ts,
                                        ptp_outgoing_actual,

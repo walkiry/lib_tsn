@@ -120,23 +120,19 @@ unsigned int update_media_clock(chanend ptp_svr,
 
 	switch (clock_type) {
 	case DEVICE_MEDIA_CLOCK_LOCAL_CLOCK:
-	    debug_printf("DEVICE_MEDIA_CLOCK_LOCAL_CLOCK\n");
 		return local_wordlen_to_external_wordlen(clock_info->wordlen);
 		break;
 
 	case DEVICE_MEDIA_CLOCK_INPUT_STREAM_DERIVED: {
-	    //debug_printf("DEVICE_MEDIA_CLOCK_INPUT_STREAM_DERIVED\n");
 		long long ierror, perror;
 
 		// If the stream info isn't valid at all, then return the default clock rate
 		if (!clock_info->stream_info2.valid) {
-		    debug_printf("Stream info 2 not valid\n");
 			return local_wordlen_to_external_wordlen(clock_info->wordlen);
 		}
 
 		// If there are not two stream infos to compare, then return default clock rate
 		if (!clock_info->stream_info1.valid) {
-            debug_printf("Stream info 1 not valid\n");
 			clock_info->stream_info1 = clock_info->stream_info2;
 			clock_info->stream_info2.valid = 0;
 			return local_wordlen_to_external_wordlen(clock_info->wordlen);
@@ -144,7 +140,6 @@ unsigned int update_media_clock(chanend ptp_svr,
 
 		// If the stream is unlocked, return the default clock rate
 		if (!clock_info->stream_info2.locked) {
-            debug_printf("Stream unlocked\n");
 			clock_info->wordlen = calculate_wordlen(clock_info->rate);
 			clock_info->stream_info1 = clock_info->stream_info2;
 			clock_info->stream_info2.valid = 0;
@@ -152,76 +147,15 @@ unsigned int update_media_clock(chanend ptp_svr,
 			clock_info->ierror = 0;
 		// We have all the info we need to perform clock recovery
 		} else {
-            //debug_printf("clock_info valid\n");
-
-
-            // wordlen is in (XMOS-Timerticks per second) << 24
-            // 20.83 ms = 136533333 external wordlen << 8 >> 24 / 100 = 1000 * sample period at 48kHz
-            debug_printf("external wordlen %x\n", local_wordlen_to_external_wordlen(clock_info->wordlen));
-
-            debug_printf("outgoing_ptp_ts %x %x\n", (unsigned int)clock_info->stream_info1.outgoing_ptp_ts, (unsigned int)clock_info->stream_info2.outgoing_ptp_ts);
-
-            debug_printf("presentation timestamps %x %x\n", (unsigned int)clock_info->stream_info1.presentation_ts, (unsigned int)clock_info->stream_info2.presentation_ts);
-
-            // Calcualte difference of current and previous timestamp --> 21000102 ns = 21.00 ms
-            unsigned int diff_presentation = clock_info->stream_info2.presentation_ts
-                    - clock_info->stream_info1.presentation_ts;
-
-            debug_printf("diff_presentation %d\n", diff_presentation);
-
-            // save new timestamp
-            //clock_info->stream_info1.presentation_ts = clock_info->stream_info2.presentation_ts;
 
             // Note: Local timestamps are based on 100MHz clock?
-            // diff_local is round about 20 ms
+            // diff_local is expected to be about 20 ms
             diff_local = clock_info->stream_info2.local_ts
                     - clock_info->stream_info1.local_ts;
-
-            //debug_printf("stream_info2.local_ts %d stream_info1.local_ts %d diff_local %d\n", clock_info->stream_info2.local_ts, clock_info->stream_info1.local_ts, diff_local);
-            debug_printf("diff_local %d us/100\n",  diff_local);
-
-#if 0
-
-            // This is ptp time in ns!
-            ierror = (signed) clock_info->stream_info2.outgoing_ptp_ts -
-                     (signed) clock_info->stream_info2.presentation_ts;
-
-            debug_printf("ierror %d ns\n",ierror);
-
-            //ierror = ierror << WORDLEN_FRACTIONAL_BITS;
-
-            if (clock_info->first) {
-                perror = 0;
-                clock_info->first = 0;
-            } else
-                perror = ierror - clock_info->ierror;
-
-            clock_info->ierror = ierror;
-
-            debug_printf("perror %d\n",perror);
-
-            //clock_info->wordlen = clock_info->wordlen - ((perror / diff_local) * 80)/11 - ((ierror / diff_local) * 1) / 5;
-            //clock_info->wordlen = clock_info->wordlen - ierror / diff_local;
-
-
-            // save
-            clock_info->stream_info1 = clock_info->stream_info2;
-            clock_info->stream_info2.valid = 0;
-
-#else
-            // Note: Local timestamps are based on 100MHz clock?
-
-            // diff_local is round about 20 ms
-			diff_local = clock_info->stream_info2.local_ts
-					- clock_info->stream_info1.local_ts;
-
-			debug_printf("diff_local %d\n",diff_local);
 
 			// This is ptp time in ns!
 			ierror = (signed) clock_info->stream_info2.outgoing_ptp_ts -
 					 (signed) clock_info->stream_info2.presentation_ts;
-
-			debug_printf("ierror %d ns\n",ierror);
 
 			ierror = ierror << WORDLEN_FRACTIONAL_BITS;
 
@@ -233,31 +167,35 @@ unsigned int update_media_clock(chanend ptp_svr,
 
 			clock_info->ierror = ierror;
 
+#if MEDIA_CLOCK_DBG_PRINTS
+            // Calcualte difference of current and previous timestamp --> 21000102 ns = 21.00 ms
+            unsigned int diff_presentation = clock_info->stream_info2.presentation_ts
+                    - clock_info->stream_info1.presentation_ts;
+
+            debug_printf("diff_presentation %d\n", diff_presentation);
+
+            // wordlen is in (XMOS-Timerticks per second) << 24
+            // 20.83 ms = 136533333 external wordlen << 8 >> 24 / 100 = 1000 * sample period at 48kHz
+            debug_printf("external wordlen %x\n", local_wordlen_to_external_wordlen(clock_info->wordlen));
+            debug_printf("outgoing_ptp_ts %x %x\n", (unsigned int)clock_info->stream_info1.outgoing_ptp_ts, (unsigned int)clock_info->stream_info2.outgoing_ptp_ts);
+            debug_printf("presentation timestamps %x %x\n", (unsigned int)clock_info->stream_info1.presentation_ts, (unsigned int)clock_info->stream_info2.presentation_ts);
+            debug_printf("diff_local %d us/100\n",  diff_local);
+            debug_printf("ierror %d ns\n",ierror>>WORDLEN_FRACTIONAL_BITS);
+            debug_printf("ierror %d\n",ierror);
 			debug_printf("perror %d\n",perror);
+            debug_printf("old wordlen %d\n", clock_info->wordlen);
+#endif
 
 #if 0
 			// These values were tuned for CS2300-CP PLL
 			clock_info->wordlen = clock_info->wordlen - ((perror / diff_local) * 32) - ((ierror / diff_local) / 4);
 #else
-			debug_printf("old wordlen %d\n", clock_info->wordlen);
 			// and these for CS2100-CP PLL
 			// Note: Value is shifted multiplied by 25, divided by 2 and then shifted by 16 to get fractional baselength (We have 16 Fractional Bits!)
 			clock_info->wordlen = clock_info->wordlen - ((perror / diff_local) * 80)/11 - ((ierror / diff_local) * 1) / 5; // this is working for am824
-//			clock_info->wordlen = clock_info->wordlen - ((perror / diff_local) * 1)/11 - ((ierror / diff_local) * 1) / 1; // no effect
-//          clock_info->wordlen = clock_info->wordlen - ((perror / diff_local) * 1)/11 - ((ierror / diff_local) * 5) / 5; // no effect
-//          clock_info->wordlen = clock_info->wordlen - ((perror / diff_local) * 8)/11 - ((ierror / diff_local) * 1) / 5; // oscillating, but not running completly away
-//			clock_info->wordlen = clock_info->wordlen - ((perror / diff_local) * 1)/11 - ((ierror / diff_local) * 1) / 5; // more oscillation
-//			clock_info->wordlen = clock_info->wordlen - ((perror / diff_local) * 40)/11 - ((ierror / diff_local) * 1) / 5; // ends with drifting
-//            clock_info->wordlen = clock_info->wordlen - ((perror / diff_local) * 20)/11 - ((ierror / diff_local) * 1) / 5; //
-
-
-			#endif
-
-			debug_printf("new wordlen %d\n", clock_info->wordlen);
-
+#endif
 			clock_info->stream_info1 = clock_info->stream_info2;
 			clock_info->stream_info2.valid = 0;
-#endif
 		}
 		break;
 	}
