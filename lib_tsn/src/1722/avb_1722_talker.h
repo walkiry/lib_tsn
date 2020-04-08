@@ -43,25 +43,17 @@ typedef struct avb1722_Talker_StreamConfig_t
   unsigned int fifo_mask;
   //! the type of samples in the stream
   unsigned int sampleType;
-
-  unsigned int current_samples_in_packet;
+  //! the current number of frames in the packet (the packet is send, when frames_per_packet is reached).
+  unsigned int current_frames_in_packet;
 
   unsigned int timestamp_valid;
 
   unsigned int timestamp;
 
-  //! Data Block Count (count of samples transmitted in the stream)
-  //! From 61883: "A data block contains all data arriving at the transmitter within
-  //! an audio sample period. The data block contains all the data which make up an event
-  int dbc_at_start_of_last_packet;
-  //! Number of samples per packet in the audio fifo (known as the SYT_INTERVAL in 61883)
+  //! Number of samples per packet in the audio fifo
   unsigned int ts_interval;
-  //! Number of samples per 1722 packet (integer part)
-  unsigned int samples_per_packet_base;
-  //! Number of samples per 1722 packet (16.16)
-  unsigned int samples_per_packet_fractional;
-  //! An accumulator for the fractional part
-  unsigned int rem;
+  //! Number of frames per 1722 packet (or number of samples per channel)
+  unsigned int frames_per_packet;
   //! a flag, true when the stream has just been initialised
   unsigned int initial;
   //! the delay in ms that is added to the current PTP time
@@ -72,6 +64,12 @@ typedef struct avb1722_Talker_StreamConfig_t
   int txport;
   //! a transmitted packet sequence counter
   char sequence_number;
+  //! format specific field for aaf
+  unsigned int format_specific;
+  //! format specific field for aaf
+  unsigned int packet_info;
+  //! 1722 subytype e.g. AAF
+  char subtype;
 } avb1722_Talker_StreamConfig_t;
 
 
@@ -84,6 +82,14 @@ void avb1722_set_buffer_vlan(int vlan,
  *  It updates the static portion of Ehternet/AVB transport layer headers.
  */
 void AVB1722_Talker_bufInit(unsigned char Buf[],
+                            REFERENCE_PARAM(avb1722_Talker_StreamConfig_t,
+                                            pStreamConfig),
+                            int vlan_id);
+
+/** This configure AVB Talker buffer for a given stream configuration.
+ *  It updates the static portion of Ehternet/AVB transport layer headers.
+ */
+void AVB1722_AAF_Talker_bufInit(unsigned char Buf[],
                             REFERENCE_PARAM(avb1722_Talker_StreamConfig_t,
                                             pStreamConfig),
                             int vlan_id);
@@ -101,12 +107,19 @@ int avb1722_create_packet(unsigned char Buf[],
                                           timeInfo),
                           audio_frame_t *frame,
                           int stream);
+int avb1722_create_aaf_packet(unsigned char Buf[],
+                          REFERENCE_PARAM(avb1722_Talker_StreamConfig_t,
+                                          stream_info),
+                          REFERENCE_PARAM(ptp_time_info_mod64,
+                                          timeInfo),
+                          audio_frame_t *frame,
+                          int stream);
 #ifdef __XC__
 }
 #endif
 
-#ifdef AVB_1722_FORMAT_61883_6
-#define MAX_PKT_BUF_SIZE_TALKER (AVB_ETHERNET_HDR_SIZE + AVB_TP_HDR_SIZE + AVB_CIP_HDR_SIZE + AVB1722_TALKER_MAX_NUM_SAMPLES_PER_CHANNEL * AVB_MAX_CHANNELS_PER_TALKER_STREAM * 4 + 4)
+#ifdef AVB_1722_FORMAT_AAF
+#define MAX_PKT_BUF_SIZE_TALKER (AVB_ETHERNET_HDR_SIZE + AVB_TP_HDR_SIZE + AVB1722_TALKER_MAX_NUM_SAMPLES_PER_CHANNEL * AVB_MAX_CHANNELS_PER_TALKER_STREAM * 4 + 4)
 #endif
 
 struct talker_counters {

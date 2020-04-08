@@ -55,30 +55,28 @@ static transaction configure_stream(chanend avb1722_tx_config,
 
   avb1722_tx_config :> stream.presentation_delay;
 
+  unsigned int nsr = 0;
+
   switch (rate)
   {
-  case 8000:   stream.ts_interval = 1; break;
-  case 16000:  stream.ts_interval = 2; break;
-  case 32000:  stream.ts_interval = 8; break;
-  case 44100:  stream.ts_interval = 8; break;
-  case 48000:  stream.ts_interval = 8; break;
-  case 88200:  stream.ts_interval = 16; break;
-  case 96000:  stream.ts_interval = 16; break;
-  case 176400: stream.ts_interval = 32; break;
-  case 192000: stream.ts_interval = 32; break;
+  case 48000:  stream.ts_interval =  6; stream.frames_per_packet =  6; nsr = 0x5; break;
+  case 96000:  stream.ts_interval = 12; stream.frames_per_packet = 12; nsr = 0x7; break;
+  case 192000: stream.ts_interval = 24; stream.frames_per_packet = 24; nsr = 0x9; break;
   default: __builtin_trap(); break;
   }
 
-  tmp = ((rate / 100) << 16) / (AVB1722_PACKET_RATE / 100);
-  stream.samples_per_packet_base = tmp >> 16;
-  stream.samples_per_packet_fractional = tmp & 0xffff;
-  stream.rem = 0;
+  stream.subtype = 0x02;
 
-  stream.current_samples_in_packet = 0;
+  stream.format_specific = (0x2 << 24) | (nsr << 20) | (stream.num_channels << 8) | (32-1);
+
+  unsigned int stream_data_length = 4 * stream.num_channels * stream.frames_per_packet;
+
+  stream.packet_info = stream_data_length << 16;
+
+  stream.current_frames_in_packet = 0;
   stream.timestamp_valid = 0;
 
   stream.initial = 1;
-  stream.dbc_at_start_of_last_packet = 0;
   stream.active = 1;
   stream.sequence_number = 0;
 #if NUM_ETHERNET_PORTS > 1
@@ -149,7 +147,7 @@ void avb_1722_talker_handle_cmd(chanend c_talker_ctl,
         if (stream_num > st.max_active_avb_stream)
           st.max_active_avb_stream = stream_num;
 
-        AVB1722_Talker_bufInit((st.tx_buf[stream_num],unsigned char[]),
+        AVB1722_AAF_Talker_bufInit((st.tx_buf[stream_num],unsigned char[]),
                                st.talker_streams[stream_num],
                                st.vlan);
 
@@ -215,22 +213,29 @@ unsafe void avb_1722_talker_send_packets(streaming chanend c_eth_tx_hp,
   audio_frame_t * unsafe frame = (audio_frame_t *)&p_buffer->buffer[rd_buf];
 
   if (st.max_active_avb_stream != -1) {
-    for (int i=0; i < (st.max_active_avb_stream+1); i++) {
+    for (int i=0; i < (st.max_active_avb_stream+1); i++)
+    {
       if (st.talker_streams[i].active==2) { // TODO: Replace int with enum
-        int packet_size = avb1722_create_packet((st.tx_buf[i], unsigned char[]),
+        int packet_size = avb1722_create_aaf_packet((st.tx_buf[i], unsigned char[]),
                                                 st.talker_streams[i],
                                                 timeInfo,
                                                 frame, i);
-        if (!st.tx_buf_fill_size[i]) st.tx_buf_fill_size[i] = packet_size;
+        if (!st.tx_buf_fill_size[i])
+        {
+          st.tx_buf_fill_size[i] = packet_size;
+        }
       }
-      if (i == st.max_active_avb_stream) {
+      if (i == st.max_active_avb_stream)
+      {
         p_buffer->data_ready = 0;
       }
     }
 
-    for (int i=0; i < (st.max_active_avb_stream+1); i++) {
+    for (int i=0; i < (st.max_active_avb_stream+1); i++)
+    {
       int packet_size = st.tx_buf_fill_size[i];
-      if (packet_size) {
+      if (packet_size)
+      {
         ethernet_send_hp_packet(c_eth_tx_hp, &(st.tx_buf[i], unsigned char[])[2], packet_size, ETHERNET_ALL_INTERFACES);
         st.tx_buf_fill_size[i] = 0;
         st.counters.sent_1722++;

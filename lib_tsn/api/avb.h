@@ -18,6 +18,7 @@ enum avb_stream_format_t
 {
   AVB_FORMAT_MBLA_24BIT, /*!< 24bit MBLA */
   AVB_FORMAT_CRF, /*!< CRF */
+  AVB_FORMAT_AAF, /*!< 24bit MBLA */
 };
 
 
@@ -415,6 +416,7 @@ extends client interface avb_interface : {
     avb_source_info_t source;
     source = i._get_source_info(source_num);
     len = source.stream.num_channels;
+    debug_printf("source.stream.num_channels %d\n", source.stream.num_channels);
     memcpy(map, source.map, len<<2);
     return 1;
   }
@@ -438,6 +440,7 @@ extends client interface avb_interface : {
   static inline int set_source_map(client interface avb_interface i, unsigned source_num,
                      int map[len], unsigned len)
   {
+    debug_printf("set_source_map len %d\n", len);
     if (source_num >= AVB_NUM_SOURCES)
       return 0;
     avb_source_info_t source;
@@ -823,6 +826,7 @@ extends client interface avb_interface : {
     avb_sink_info_t sink;
     sink = i._get_sink_info(sink_num);
     len = sink.stream.num_channels;
+    debug_printf("sink.stream.num_channels %d\n", sink.stream.num_channels);
     memcpy(map, sink.map, len<<2);
     return 1;
   }

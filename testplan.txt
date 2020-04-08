@@ -1,0 +1,25 @@
+title:
+clock master aaf
+steps:
+configure clock source on REF to use stream
+configure clock source on DUT to use internal 
+configure sampling rate on REF for 96k
+configure sampling rate on DUT for 96k
+configure stream format on REF to use aaf 96k 8ch
+configure stream format on DUT to use aaf 96k 8ch
+connect stream from DUT to REF
+result:
+syncs with some offset
+
+title:
+clock slave aaf
+steps:
+configure clock source on REF to use internal
+configure clock source on DUT to use stream
+configure sampling rate on REF for 96k
+configure sampling rate on DUT for 96k
+configure stream format on REF to use aaf 96k 4ch
+configure stream format on DUT to use aaf 96k 4ch
+connect stream from REF to DUT
+result:
+sync with some offset

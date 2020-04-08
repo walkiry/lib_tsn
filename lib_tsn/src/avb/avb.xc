@@ -68,6 +68,7 @@ static void register_talkers(chanend (&?c_talker_ctl)[], unsigned char mac_addr[
             AVB_SRP_TSPEC_RESERVED_VALUE);
         source->reservation.tspec_max_interval = AVB_SRP_MAX_INTERVAL_FRAMES_DEFAULT;
         source->reservation.accumulated_latency = AVB_SRP_ACCUMULATED_LATENCY_DEFAULT;
+        debug_printf("register_talkers: num_channels %d\n", source->stream.num_channels);
         max_talker_stream_id++;
       }
     }
@@ -94,6 +95,7 @@ static void register_listeners(chanend (&?c_listener_ctl)[])
         sink->stream.local_id = j;
         sink->stream.flags = 0;
         sink->reservation.vlan_id = 0;
+        debug_printf("register_listeners: num_channels %d\n", sink->stream.num_channels);
         max_listener_stream_id++;
       }
       c_listener_ctl[i] <: max_link_id;
@@ -184,7 +186,7 @@ static int valid_to_leave_vlan(int vlan)
 }
 
 static void set_avb_sink_map(chanend c, avb_sink_info_t &sink, unsigned sink_num) {
-  debug_printf("Listener sink #%d chan map:\n", sink_num);
+  debug_printf("set_avb_sink_map: Listener sink #%d chan map (%d channels):\n", sink_num, sink.stream.num_channels);
   master {
     c <: AVB1722_ADJUST_LISTENER_STREAM;
     c <: (int)sink.stream.local_id;
@@ -215,7 +217,7 @@ static void update_sink_state(unsigned sink_num,
         state == AVB_SINK_STATE_POTENTIAL) {
 
       unsigned clk_ctl = outputs[sink->map[0]].clk_ctl;
-      debug_printf("Listener sink #%d chan map:\n", sink_num);
+      debug_printf("update_sink_state: Listener sink #%d chan map (%d channels):\n", sink_num, (int)sink->stream.num_channels);
       master {
         *c <: AVB1722_CONFIGURE_LISTENER_STREAM;
         *c <: (int)sink->stream.local_id;
@@ -329,9 +331,9 @@ static void configure_talker_stream(chanend c, avb_source_info_t *alias source, 
 
 static unsigned avb_srp_calculate_max_framesize(avb_source_info_t *source_info)
 {
-#if defined(AVB_1722_FORMAT_61883_6) || defined(AVB_1722_FORMAT_SAF)
+#if defined(AVB_1722_FORMAT_AAF)
   const unsigned samples_per_packet = (AVB_MAX_AUDIO_SAMPLE_RATE + (AVB1722_PACKET_RATE-1))/AVB1722_PACKET_RATE;
-  return AVB1722_PLUS_SIP_HEADER_SIZE + (source_info->stream.num_channels * samples_per_packet * 4);
+  return (source_info->stream.num_channels * samples_per_packet * 4);
 #endif
 #if defined(AVB_1722_FORMAT_61883_4)
   return AVB1722_PLUS_SIP_HEADER_SIZE + (192 * MAX_TS_PACKETS_PER_1722);
@@ -363,8 +365,8 @@ static void update_source_state(unsigned source_num,
       }
 
       // check that the map is ok
-      for (int i=0;i<source->stream.num_channels;i++)
-      {
+      debug_printf("source->stream.num_channels %d\n", source->stream.num_channels);
+      for (int i=0;i<source->stream.num_channels;i++) {
         if (inputs[source->map[i]].mapped_to != UNMAPPED) {
           valid = 0;
         }

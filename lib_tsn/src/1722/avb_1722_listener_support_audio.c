@@ -191,5 +191,3 @@ int avb_1722_listener_process_packet(chanend buf_ctl,
 }
 
 #endif
-
-
