@@ -453,23 +453,19 @@ int main(void)
     on tile[0]: [[distribute]] output_gpio(i_gpio, 4, p_audio_shared, gpio_pin_map);
 
     on tile[0]: {
-      configure_clock_src_divide(clk_tdm_bclk, p_tdm_mclk, 1);
-      configure_port_clock_output(p_tdm_bclk, clk_tdm_bclk);
-
-      tdm_master(i_tdm, p_tdm_fsync, p_aud_dout, AVB_NUM_MEDIA_OUTPUTS/8, p_aud_din, AVB_NUM_MEDIA_INPUTS/8,
-                 clk_tdm_bclk, c_data);
+      tdm_master(i_tdm, AVB_NUM_MEDIA_OUTPUTS/8, AVB_NUM_MEDIA_INPUTS/8, c_data);
     }
 
     on tile[0]: adat_tx(c_data, c_port);
 
     on tile[0]: {
-      //set_clock_src(mck_blk, p_tdm_mclk);
-      //set_port_clock(adat_port, mck_blk);
-      //set_clock_fall_delay(mck_blk, 7);  // XAI2 board
-      //start_clock(mck_blk);
+      set_clock_src(mck_blk, p_tdm_mclk);
+      set_port_clock(adat_port, mck_blk);
+      set_clock_fall_delay(mck_blk, 7);  // XAI2 board
+      start_clock(mck_blk);
       while (1) {
         unsigned sample = inuint(c_port);
-        //adat_port <: byterev(sample);
+        adat_port <: byterev(sample);
       }
     }
 
