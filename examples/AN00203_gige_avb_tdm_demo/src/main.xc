@@ -48,14 +48,14 @@ on tile[0]: out buffered port:32 p_tdm_bclk = XS1_PORT_1H;
 on tile[0]: in port p_tdm_mclk = XS1_PORT_1F;
 
 clock clk_tdm_bclk = on tile[0]: XS1_CLKBLK_3;
-//clock clk_tdm_mclk = on tile[0]: XS1_CLKBLK_4;
+clock clk_tdm_mclk = on tile[0]: XS1_CLKBLK_4;
 
 on tile[0]: out buffered port:32 p_aud_dout[4] = {XS1_PORT_1M, XS1_PORT_1N, XS1_PORT_1O, XS1_PORT_1P};
 on tile[0]: in buffered port:32 p_aud_din[4] = {XS1_PORT_1I, XS1_PORT_1J, XS1_PORT_1K, XS1_PORT_1L};
 
 // ADAT
 on tile[0]: out buffered port:32 adat_port = XS1_PORT_1E;
-clock mck_blk = on tile[0]: XS1_CLKBLK_4;
+clock mck_blk = on tile[0]: XS1_CLKBLK_5;
 
 on tile[0]: out port p_audio_shared = XS1_PORT_8C;
 
@@ -462,17 +462,16 @@ int main(void)
 
     on tile[0]: adat_tx(c_data, c_port);
 
-    /*
     on tile[0]: {
-      set_clock_src(mck_blk, p_tdm_mclk);
-      set_port_clock(adat_port, mck_blk);
-      set_clock_fall_delay(mck_blk, 7);  // XAI2 board
-      start_clock(mck_blk);
+      //set_clock_src(mck_blk, p_tdm_mclk);
+      //set_port_clock(adat_port, mck_blk);
+      //set_clock_fall_delay(mck_blk, 7);  // XAI2 board
+      //start_clock(mck_blk);
       while (1) {
-        adat_port <: byterev(inuint(c_port));
+        unsigned sample = inuint(c_port);
+        //adat_port <: byterev(sample);
       }
     }
-    */
 
     on tile[0]: [[distribute]] buffer_manager_to_tdm(i_tdm, c_audio, i_i2c[I2S_TO_I2C], c_sound_activity, 0x3,
                                                      i_gpio[0], i_gpio[1], i_gpio[2], i_gpio[3]);
