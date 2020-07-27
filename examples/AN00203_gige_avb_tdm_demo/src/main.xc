@@ -59,43 +59,6 @@ clock mck_blk = on tile[0]: XS1_CLKBLK_5;
 
 on tile[0]: out port p_audio_shared = XS1_PORT_8C;
 
-#define CS5368_ADDR           0x4C // I2C address of the CS5368 DAC
-#define CS5368_CHIP_REV       0x00 // DAC register addresses...
-#define CS5368_GCTL_MDE       0x01
-#define CS5368_OVFL_ST        0x02
-
-#define CS4384_ADDR           0x18 // I2C address of the CS4384 ADC
-#define CS4384_CHIP_REV       0x01 // ADC register addresses...
-#define CS4384_MODE_CTRL      0x02
-#define CS4384_PCM_CTRL       0x03
-#define CS4384_DSD_CTRL       0x04
-#define CS4384_FLT_CTRL       0x05
-#define CS4384_INV_CTRL       0x06
-#define CS4384_GRP_CTRL       0x07
-#define CS4384_RMP_MUTE       0x08
-#define CS4384_MUTE_CTRL      0x09
-#define CS4384_MIX_PR1        0x0a
-#define CS4384_VOL_A1         0x0b
-#define CS4384_VOL_B1         0x0c
-#define CS4384_MIX_PR2        0x0d
-#define CS4384_VOL_A2         0x0e
-#define CS4384_VOL_B2         0x0f
-#define CS4384_MIX_PR3        0x10
-#define CS4384_VOL_A3         0x11
-#define CS4384_VOL_B3         0x12
-#define CS4384_MIX_PR4        0x13
-#define CS4384_VOL_A4         0x14
-#define CS4384_VOL_B4         0x15
-#define CS4384_CM_MODE        0x16
-#define CS5368_CHIP_REV       0x00
-#define CS5368_GCTL_MDE       0x01
-#define CS5368_OVFL_ST        0x02
-#define CS5368_OVFL_MSK       0x03
-#define CS5368_HPF_CTRL       0x04
-#define CS5368_PWR_DN         0x06
-#define CS5368_MUTE_CTRL      0x08
-#define CS5368_SDO_EN         0x0a
-
 #pragma unsafe arrays
 [[always_inline]][[distributable]]
 void buffer_manager_to_tdm(server i2s_callback_if tdm,
@@ -143,53 +106,11 @@ void buffer_manager_to_tdm(server i2s_callback_if tdm,
       // Take DAC out of reset
       dac_reset.output(1);
 
-      /* Mode Control 1 (Address: 0x02) */
-      /* bit[7] : Control Port Enable (CPEN)     : Set to 1 for enable
-       * bit[6] : Freeze controls (FREEZE)       : Set to 1 for freeze
-       * bit[5] : PCM/DSD Selection (DSD/PCM)    : Set to 0 for PCM
-       * bit[4:1] : DAC Pair Disable (DACx_DIS)  : All Dac Pairs enabled
-       * bit[0] : Power Down (PDN)               : Powered down
-       */
-      i2c.write_reg(CS4384_ADDR, CS4384_MODE_CTRL, 0b11000001);
-
-      /* PCM Control (Address: 0x03) */
-      /* bit[7:4] : Digital Interface Format (DIF) : 0b1100 for TDM
-       * bit[3:2] : Reserved
-       * bit[1:0] : Functional Mode (FM) : 0x11 for auto-speed detect (32 to 200kHz)
-      */
-      i2c.write_reg(CS4384_ADDR, CS4384_PCM_CTRL, 0b11000111);
-
-      /* Mode Control 1 (Address: 0x02) */
-      /* bit[7] : Control Port Enable (CPEN)     : Set to 1 for enable
-       * bit[6] : Freeze controls (FREEZE)       : Set to 0 for freeze
-       * bit[5] : PCM/DSD Selection (DSD/PCM)    : Set to 0 for PCM
-       * bit[4:1] : DAC Pair Disable (DACx_DIS)  : All Dac Pairs enabled
-       * bit[0] : Power Down (PDN)               : Not powered down
-       */
-      i2c.write_reg(CS4384_ADDR, CS4384_MODE_CTRL, 0b10000000);
-
       // Take ADC out of reset
       adc_reset.output(1);
 
       unsigned adc_dif = 0x02; // TDM mode
       unsigned adc_mode = 0x03;    /* Slave mode all speeds */
-
-      /* Reg 0x01: (GCTL) Global Mode Control Register */
-      /* Bit[7]: CP-EN: Manages control-port mode
-       * Bit[6]: CLKMODE: Setting puts part in 384x mode
-       * Bit[5:4]: MDIV[1:0]: Set to 01 for /2
-       * Bit[3:2]: DIF[1:0]: Data Format: 0x01 for I2S, 0x02 for TDM
-       * Bit[1:0]: MODE[1:0]: Mode: 0x11 for slave mode
-       */
-      i2c.write_reg(CS5368_ADDR, CS5368_GCTL_MDE, 0b10010000 | (adc_dif << 2) | adc_mode);
-
-      /* Reg 0x06: (PDN) Power Down Register */
-      /* Bit[7:6]: Reserved
-       * Bit[5]: PDN-BG: When set, this bit powers-own the bandgap reference
-       * Bit[4]: PDM-OSC: Controls power to internal oscillator core
-       * Bit[3:0]: PDN: When any bit is set all clocks going to that channel pair are turned off
-       */
-      i2c.write_reg(CS5368_ADDR, CS5368_PWR_DN, 0b00000000);
 
       unsafe {
         c_audio :> double_buffer;
@@ -239,7 +160,7 @@ void buffer_manager_to_tdm(server i2s_callback_if tdm,
           tmr :> p_in_frame->timestamp;
           audio_frame_t *unsafe new_frame = audio_buffers_swap_active_buffer(*double_buffer);
           c_audio <: p_in_frame;
-          p_in_frame = new_frame;
+          p_in_frame = new_frame; // TODO should this be done beore  c_audio <: p_in_frame; ?
           sound_activity_update++;
           if (sound_activity_update == sound_activity_update_interval) {
             c_sound_activity <: channel_mask;
