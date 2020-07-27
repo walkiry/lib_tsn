@@ -221,7 +221,7 @@ void ar8035_phy_driver(client interface smi_if smi,
   smi.write_reg(phy_address, 0x0D, 0x4003);
   smi.write_reg(phy_address, 0x0E, 0);
 
-  smi_configure(smi, phy_address, LINK_1000_MBPS_FULL_DUPLEX, SMI_ENABLE_AUTONEG);
+  smi_configure(smi, phy_address, LINK_100_MBPS_FULL_DUPLEX, SMI_ENABLE_AUTONEG);
   // Periodically check the link status
   while (1) {
     select {
