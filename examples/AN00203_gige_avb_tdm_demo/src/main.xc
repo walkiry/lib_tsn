@@ -379,11 +379,8 @@ int main(void)
       tdm_master(i_tdm, AVB_NUM_MEDIA_OUTPUTS/8, AVB_NUM_MEDIA_INPUTS/8, c_data, oChan);
     }
 
+#if 0
     on tile[0]: adat_tx(c_data, c_port);
-
-    on tile[1]: while(1) {
-        adatReceiver48000(p, oChan);
-    }
 
     on tile[0]: {
       set_clock_src(mck_blk, p_tdm_mclk);
@@ -394,6 +391,19 @@ int main(void)
         unsigned sample = inuint(c_port);
         adat_port <: byterev(sample);
       }
+    }
+#else
+    on tile[0]: {
+        set_clock_src(mck_blk, p_tdm_mclk);
+        set_port_clock(adat_port, mck_blk);
+        set_clock_fall_delay(mck_blk, 7);  // XAI2 board
+        start_clock(mck_blk);
+        adat_tx_port(c_data, adat_port);
+    }
+#endif
+
+    on tile[1]: while(1) {
+        adatReceiver48000(p, oChan);
     }
 
     on tile[0]: [[distribute]] buffer_manager_to_tdm(i_tdm, c_audio, i_i2c[I2S_TO_I2C], 0x3,
