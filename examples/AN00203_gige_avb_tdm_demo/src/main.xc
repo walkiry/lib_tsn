@@ -58,8 +58,11 @@ on tile[0]: out buffered port:32 adat_port = XS1_PORT_1E;
 clock mck_blk = on tile[0]: XS1_CLKBLK_5;
 
 // ADAT rx
+#if 0
 on tile[1]: buffered in port:32 p = XS1_PORT_1M; // on the reference design this port is connected to midi, though it can not be used for testing on that device.
-
+#else
+on tile[0]: buffered in port:32 p = XS1_PORT_1M; // on reference design not connected to opt tx!
+#endif
 
 
 on tile[0]: out port p_audio_shared = XS1_PORT_8C;
@@ -392,6 +395,10 @@ int main(void)
         adat_port <: byterev(sample);
       }
     }
+
+    on tile[1]: while(1) {
+        adatReceiver48000(p, oChan);
+    }
 #else
     on tile[0]: {
         set_clock_src(mck_blk, p_tdm_mclk);
@@ -400,11 +407,11 @@ int main(void)
         start_clock(mck_blk);
         adat_tx_port(c_data, adat_port);
     }
-#endif
 
-    on tile[1]: while(1) {
+    on tile[0]: while(1) {
         adatReceiver48000(p, oChan);
     }
+#endif
 
     on tile[0]: [[distribute]] buffer_manager_to_tdm(i_tdm, c_audio, i_i2c[I2S_TO_I2C], 0x3,
                                                      i_gpio[0], i_gpio[1], i_gpio[2], i_gpio[3]);
