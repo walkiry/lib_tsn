@@ -7,6 +7,7 @@
 #include "gpio.h"
 #include "i2s.h"
 #include "adat_tx.h"
+#include "adat_rx.h"
 #include "i2c.h"
 #include "avb.h"
 #include "audio_clock_CS2100CP.h"
@@ -39,23 +40,27 @@ on tile[1]: port p_eth_reset = XS1_PORT_4A;
 on tile[1]: out port p_leds_row = XS1_PORT_4C;
 on tile[1]: out port p_leds_column = XS1_PORT_4D;
 
+
 on tile[0]: port p_i2c = XS1_PORT_4A;
 
 // TDM ports and clocks
 on tile[0]: out buffered port:32 p_fs[1] = { XS1_PORT_1A }; // Low frequency PLL frequency reference
-on tile[0]: out buffered port:32 p_tdm_fsync = XS1_PORT_1G;
+on tile[0]: out buffered port:32 p_tdm_fsync = XS1_PORT_1G; // TODO activate wordclock again!
 on tile[0]: out buffered port:32 p_tdm_bclk = XS1_PORT_1H;
 on tile[0]: in port p_tdm_mclk = XS1_PORT_1F;
 
 clock clk_tdm_bclk = on tile[0]: XS1_CLKBLK_3;
 clock clk_tdm_mclk = on tile[0]: XS1_CLKBLK_4;
 
-on tile[0]: out buffered port:32 p_aud_dout[4] = {XS1_PORT_1M, XS1_PORT_1N, XS1_PORT_1O, XS1_PORT_1P};
-on tile[0]: in buffered port:32 p_aud_din[4] = {XS1_PORT_1I, XS1_PORT_1J, XS1_PORT_1K, XS1_PORT_1L};
 
-// ADAT
+// ADAT tx
 on tile[0]: out buffered port:32 adat_port = XS1_PORT_1E;
 clock mck_blk = on tile[0]: XS1_CLKBLK_5;
+
+// ADAT rx
+on tile[1]: buffered in port:32 p = XS1_PORT_1M; // on the reference design this port is connected to midi, though it can not be used for testing on that device.
+
+
 
 on tile[0]: out port p_audio_shared = XS1_PORT_8C;
 
@@ -64,7 +69,6 @@ on tile[0]: out port p_audio_shared = XS1_PORT_8C;
 void buffer_manager_to_tdm(server i2s_callback_if tdm,
                            streaming chanend c_audio,
                            client interface i2c_master_if i2c,
-                           streaming chanend c_sound_activity,
                            int synth_sinewave_channel_mask,
                            client output_gpio_if dac_reset,
                            client output_gpio_if adc_reset,
@@ -163,8 +167,8 @@ void buffer_manager_to_tdm(server i2s_callback_if tdm,
           p_in_frame = new_frame; // TODO should this be done beore  c_audio <: p_in_frame; ?
           sound_activity_update++;
           if (sound_activity_update == sound_activity_update_interval) {
-            c_sound_activity <: channel_mask;
-            soutct(c_sound_activity, XS1_CT_PAUSE);
+            //c_sound_activity <: channel_mask;
+            //soutct(c_sound_activity, XS1_CT_PAUSE);
             sound_activity_update = 0;
             channel_mask = 0;
           }
@@ -178,8 +182,7 @@ void buffer_manager_to_tdm(server i2s_callback_if tdm,
 
 [[combinable]]
 void ar8035_phy_driver(client interface smi_if smi,
-                client interface ethernet_cfg_if eth,
-                streaming chanend c_sound_activity)
+                client interface ethernet_cfg_if eth)
 {
   ethernet_link_state_t link_state = ETHERNET_LINK_DOWN;
   ethernet_speed_t link_speed = LINK_1000_MBPS_FULL_DUPLEX;
@@ -236,8 +239,6 @@ void ar8035_phy_driver(client interface smi_if smi,
         eth.set_link_state(0, new_state, link_speed);
       }
       t += link_poll_period_ms * XS1_TIMER_KHZ;
-      break;
-    case c_sound_activity :> channel_mask:
       break;
     case tmr2 when timerafter(t2) :> void:
       p_leds_row <: ~(flashing_on * channel_mask);
@@ -320,6 +321,7 @@ int main(void)
   // ADAT
   chan c_port;
   chan c_data;
+  chan oChan;
 
   // AVB unit control
   chan c_talker_ctl[AVB_NUM_TALKER_UNITS];
@@ -343,7 +345,7 @@ int main(void)
   interface pull_if i_audio_in_pull;
   interface push_if i_audio_out_push;
   interface pull_if i_audio_out_pull;
-  streaming chan c_sound_activity;
+  //streaming chan c_sound_activity;
 
   par
   {
@@ -355,7 +357,7 @@ int main(void)
                                    ETHERNET_DISABLE_SHAPER);
 
     on tile[1].core[0]: rgmii_ethernet_mac_config(i_eth_cfg, NUM_ETH_CFG_CLIENTS, c_rgmii_cfg);
-    on tile[1].core[0]: ar8035_phy_driver(i_smi, i_eth_cfg[MAC_CFG_TO_PHY_DRIVER], c_sound_activity);
+    on tile[1].core[0]: ar8035_phy_driver(i_smi, i_eth_cfg[MAC_CFG_TO_PHY_DRIVER]);
 
     on tile[1]: [[distribute]] smi(i_smi, p_smi_mdio, p_smi_mdc);
 
@@ -374,10 +376,14 @@ int main(void)
     on tile[0]: [[distribute]] output_gpio(i_gpio, 4, p_audio_shared, gpio_pin_map);
 
     on tile[0]: {
-      tdm_master(i_tdm, AVB_NUM_MEDIA_OUTPUTS/8, AVB_NUM_MEDIA_INPUTS/8, c_data);
+      tdm_master(i_tdm, AVB_NUM_MEDIA_OUTPUTS/8, AVB_NUM_MEDIA_INPUTS/8, c_data, oChan);
     }
 
     on tile[0]: adat_tx(c_data, c_port);
+
+    on tile[1]: while(1) {
+        adatReceiver48000(p, oChan);
+    }
 
     on tile[0]: {
       set_clock_src(mck_blk, p_tdm_mclk);
@@ -390,7 +396,7 @@ int main(void)
       }
     }
 
-    on tile[0]: [[distribute]] buffer_manager_to_tdm(i_tdm, c_audio, i_i2c[I2S_TO_I2C], c_sound_activity, 0x3,
+    on tile[0]: [[distribute]] buffer_manager_to_tdm(i_tdm, c_audio, i_i2c[I2S_TO_I2C], 0x3,
                                                      i_gpio[0], i_gpio[1], i_gpio[2], i_gpio[3]);
 
     on tile[0]: audio_buffer_manager(c_audio, i_audio_in_push, i_audio_out_pull, c_media_ctl[0], AUDIO_TDM_IO);
