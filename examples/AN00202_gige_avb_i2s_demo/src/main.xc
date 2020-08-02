@@ -5,7 +5,7 @@
 #include <string.h>
 #include <xscope.h>
 #include "gpio.h"
-#include "adat.h"
+#include "i2s.h"
 #include "i2c.h"
 #include "avb.h"
 #include "audio_clock_CS2100CP.h"

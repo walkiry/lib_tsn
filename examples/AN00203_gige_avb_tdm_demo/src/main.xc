@@ -5,7 +5,7 @@
 #include <string.h>
 #include <xscope.h>
 #include "gpio.h"
-#include "i2s.h"
+#include "adat.h"
 #include "adat_tx.h"
 #include "adat_rx.h"
 #include "i2c.h"

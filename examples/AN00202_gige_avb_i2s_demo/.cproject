@@ -248,14 +248,12 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random/doc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random/doc/rst}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_adat}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random/lib_random}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_ethernet/lib_ethernet/doc/rst}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random/lib_random/api}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/srp}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/ptp}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_adat/api}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/media_clock/external_hw/CS2100CP}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random/lib_random/doc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/1722/maap}&quot;"/>
@@ -263,7 +261,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random/lib_random/doc/rst}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_ethernet/lib_ethernet/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_ethernet/lib_ethernet/doc/rst/images}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_adat/doc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/1722}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/1722_1}&quot;"/>
@@ -274,14 +271,16 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_ethernet/lib_ethernet/api}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/api}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/media_clock}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_adat/doc/pdf}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/media_clock/external_hw}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_ethernet/lib_ethernet}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_adat/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/audio_buffering}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_ethernet/lib_ethernet/doc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/avb}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random/lib_random/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_i2s/doc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_i2s}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_i2s/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_i2s/api}&quot;"/>
 								</option>
 								<inputType id="com.xmos.cdt.xc.compiler.input.1463156772" name="XC" superClass="com.xmos.cdt.xc.compiler.input"/>
 							</tool>
@@ -662,7 +661,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random/doc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random/doc/rst}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_adat}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random/lib_random}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_ethernet/lib_ethernet/doc/rst}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random/lib_random/api}&quot;"/>
@@ -677,7 +675,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random/lib_random/doc/rst}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_ethernet/lib_ethernet/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_ethernet/lib_ethernet/doc/rst/images}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_adat/doc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/1722}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/1722_1}&quot;"/>
@@ -688,14 +685,13 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_ethernet/lib_ethernet/api}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/api}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/media_clock}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_adat/doc/pdf}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/media_clock/external_hw}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_ethernet/lib_ethernet}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_adat/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/audio_buffering}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_ethernet/lib_ethernet/doc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/avb}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random/lib_random/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_i2s/api}&quot;"/>
 								</option>
 								<inputType id="com.xmos.cdt.c.compiler.input.c.686634325" name="C" superClass="com.xmos.cdt.c.compiler.input.c"/>
 							</tool>
@@ -1081,14 +1077,12 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random/doc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random/doc/rst}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_adat}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random/lib_random}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_ethernet/lib_ethernet/doc/rst}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random/lib_random/api}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/srp}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/ptp}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_adat/api}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/media_clock/external_hw/CS2100CP}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random/lib_random/doc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/1722/maap}&quot;"/>
@@ -1096,7 +1090,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random/lib_random/doc/rst}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_ethernet/lib_ethernet/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_ethernet/lib_ethernet/doc/rst/images}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_adat/doc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/1722}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/1722_1}&quot;"/>
@@ -1110,11 +1103,11 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_adat/doc/pdf}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/media_clock/external_hw}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_ethernet/lib_ethernet}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_adat/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/audio_buffering}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_ethernet/lib_ethernet/doc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_tsn/lib_tsn/src/avb}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_random/lib_random/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_i2s/api}&quot;"/>
 								</option>
 								<inputType id="com.xmos.cdt.cxx.compiler.input.cpp.1427302285" name="C++" superClass="com.xmos.cdt.cxx.compiler.input.cpp"/>
 							</tool>

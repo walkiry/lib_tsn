@@ -34,7 +34,7 @@ XCC_FLAGS_main.xc = $(XCC_FLAGS) -falways-inline -O3
 
 # The USED_MODULES variable lists other module used by the application.
 
-USED_MODULES = lib_i2s(>=2.3.0) lib_tsn(>=8.0.0) module_adat_tx module_adat_rx
+USED_MODULES = lib_adat(>=0.0.1) lib_tsn(>=8.0.0) module_adat_tx module_adat_rx
 
 #=============================================================================
 # The following part of the Makefile includes the common build infrastructure
