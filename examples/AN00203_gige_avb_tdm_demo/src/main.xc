@@ -58,7 +58,7 @@ on tile[0]: out buffered port:32 adat_port = XS1_PORT_1E;
 clock mck_blk = on tile[0]: XS1_CLKBLK_5;
 
 // ADAT rx
-#if 0
+#if 1
 on tile[1]: buffered in port:32 p = XS1_PORT_1M; // on the reference design this port is connected to midi, though it can not be used for testing on that device.
 #else
 on tile[0]: buffered in port:32 p = XS1_PORT_1M; // on reference design not connected to opt tx!
@@ -382,7 +382,7 @@ int main(void)
       tdm_master(i_tdm, AVB_NUM_MEDIA_OUTPUTS/8, AVB_NUM_MEDIA_INPUTS/8, c_data, oChan);
     }
 
-#if 0
+#if 1
     on tile[0]: adat_tx(c_data, c_port);
 
     on tile[0]: {

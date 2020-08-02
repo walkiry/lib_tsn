@@ -12,7 +12,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration buildProperties="" description="" id="com.xmos.cdt.toolchain.912422507" name="Default" parent="org.eclipse.cdt.build.core.emptycfg">
+				<configuration artifactName="AN00203_gige_avb_adat_demo" buildProperties="" description="" id="com.xmos.cdt.toolchain.912422507" name="Default" parent="org.eclipse.cdt.build.core.emptycfg">
 					<folderInfo id="com.xmos.cdt.toolchain.912422507.270388092" name="/" resourcePath="">
 						<toolChain id="com.xmos.cdt.toolchain.183911016" name="com.xmos.cdt.toolchain" superClass="com.xmos.cdt.toolchain">
 							<targetPlatform archList="all" binaryParser="com.xmos.cdt.core.XEBinaryParser;org.eclipse.cdt.core.GNU_ELF" id="com.xmos.cdt.core.platform.1042282205" isAbstract="false" osList="linux,win32,macosx" superClass="com.xmos.cdt.core.platform"/>
