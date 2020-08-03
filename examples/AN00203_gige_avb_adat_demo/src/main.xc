@@ -64,7 +64,6 @@ on tile[1]: buffered in port:32 p = XS1_PORT_1M; // on the reference design this
 on tile[0]: buffered in port:32 p = XS1_PORT_1M; // on reference design not connected to opt tx!
 #endif
 
-
 on tile[0]: out port p_audio_shared = XS1_PORT_8C;
 
 #pragma unsafe arrays
@@ -325,6 +324,7 @@ int main(void)
   chan c_port;
   chan c_data;
   chan oChan;
+  chan c_dig_rx;
 
   // AVB unit control
   chan c_talker_ctl[AVB_NUM_TALKER_UNITS];
@@ -379,7 +379,7 @@ int main(void)
     on tile[0]: [[distribute]] output_gpio(i_gpio, 4, p_audio_shared, gpio_pin_map);
 
     on tile[0]: {
-      tdm_master(i_tdm, AVB_NUM_MEDIA_OUTPUTS/8, AVB_NUM_MEDIA_INPUTS/8, c_data, oChan);
+      tdm_master(i_tdm, AVB_NUM_MEDIA_OUTPUTS/8, AVB_NUM_MEDIA_INPUTS/8, c_data, c_dig_rx);
     }
 
 #if 1
@@ -395,6 +395,8 @@ int main(void)
         adat_port <: byterev(sample);
       }
     }
+
+    on tile[1]: adatRxBuffer (oChan, c_dig_rx);
 
     on tile[1]: while(1) {
         adatReceiver48000(p, oChan);
