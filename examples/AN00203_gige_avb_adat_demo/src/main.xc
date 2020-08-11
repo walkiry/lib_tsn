@@ -115,9 +115,6 @@ void buffer_manager_to_tdm(server i2s_callback_if tdm,
       // Take ADC out of reset
       adc_reset.output(1);
 
-      unsigned adc_dif = 0x02; // TDM mode
-      unsigned adc_mode = 0x03;    /* Slave mode all speeds */
-
       unsafe {
         c_audio :> double_buffer;
         p_in_frame = &double_buffer->buffer[double_buffer->active_buffer];
@@ -379,7 +376,7 @@ int main(void)
     on tile[0]: [[distribute]] output_gpio(i_gpio, 4, p_audio_shared, gpio_pin_map);
 
     on tile[0]: {
-      tdm_master(i_tdm, AVB_NUM_MEDIA_OUTPUTS/8, AVB_NUM_MEDIA_INPUTS/8, c_data, c_dig_rx);
+      tdm_master(i_tdm, AVB_NUM_MEDIA_OUTPUTS/8, AVB_NUM_MEDIA_INPUTS/8, c_data, c_dig_rx, p_tdm_fsync);
     }
 
 #if 1
@@ -396,11 +393,12 @@ int main(void)
       }
     }
 
-    on tile[1]: adatRxBuffer (oChan, c_dig_rx);
+    on tile[1]: adatRxBuffer(oChan, c_dig_rx);
 
     on tile[1]: while(1) {
         adatReceiver48000(p, oChan);
     }
+
 #else
     on tile[0]: {
         set_clock_src(mck_blk, p_tdm_mclk);
@@ -415,7 +413,9 @@ int main(void)
     }
 #endif
 
-    on tile[0]: [[distribute]] buffer_manager_to_tdm(i_tdm, c_audio, i_i2c[I2S_TO_I2C], 0x3,
+    #define SYNTH_SINEWAVE_CHANNEL_MASK 0x0 //0x3
+
+    on tile[0]: [[distribute]] buffer_manager_to_tdm(i_tdm, c_audio, i_i2c[I2S_TO_I2C], SYNTH_SINEWAVE_CHANNEL_MASK,
                                                      i_gpio[0], i_gpio[1], i_gpio[2], i_gpio[3]);
 
     on tile[0]: audio_buffer_manager(c_audio, i_audio_in_push, i_audio_out_pull, c_media_ctl[0], AUDIO_TDM_IO);
