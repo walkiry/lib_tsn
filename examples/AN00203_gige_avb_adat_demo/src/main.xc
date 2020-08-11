@@ -376,7 +376,7 @@ int main(void)
     on tile[0]: [[distribute]] output_gpio(i_gpio, 4, p_audio_shared, gpio_pin_map);
 
     on tile[0]: {
-      tdm_master(i_tdm, AVB_NUM_MEDIA_OUTPUTS/8, AVB_NUM_MEDIA_INPUTS/8, c_data, c_dig_rx, p_tdm_fsync);
+      tdm_master(i_tdm, AVB_NUM_MEDIA_OUTPUTS/8, AVB_NUM_MEDIA_INPUTS/8, c_data, oChan, p_tdm_fsync);
     }
 
 #if 1
@@ -393,10 +393,11 @@ int main(void)
       }
     }
 
-    on tile[1]: adatRxBuffer(oChan, c_dig_rx);
+    //on tile[1]: adatRxBuffer(oChan, c_dig_rx);
 
     on tile[1]: while(1) {
         adatReceiver48000(p, oChan);
+        debug_printf("adat rx lost lock\n");
     }
 
 #else
