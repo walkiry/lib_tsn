@@ -59,7 +59,10 @@ clock mck_blk = on tile[0]: XS1_CLKBLK_5;
 
 // ADAT rx
 #if 1
-on tile[1]: buffered in port:32 p = XS1_PORT_1M; // on the reference design this port is connected to midi, though it can not be used for testing on that device.
+on tile[1]: buffered in port:32 p_adat_rx = XS1_PORT_1M; // on the reference design this port is connected to midi rx, though it can not be used for testing on that device.
+#define CLKBLK_ADAT_RX     XS1_CLKBLK_REF /* Use REF for ADAT_RX on U/x200 series */
+on tile[1] : clock    clk_adat_rx                    = CLKBLK_ADAT_RX;
+on tile[0]: buffered out port:32 p_trace_adat_rx = XS1_PORT_1N; // on the reference design this port is connected to xDAC_SD2
 #else
 on tile[0]: buffered in port:32 p = XS1_PORT_1M; // on reference design not connected to opt tx!
 #endif
@@ -139,6 +142,12 @@ void buffer_manager_to_tdm(server i2s_callback_if tdm,
           if (sinewave_index == 256)
             sinewave_index = 0;
         }
+        if (index == 7) {
+          tmr :> p_in_frame->timestamp;
+          audio_frame_t *unsafe new_frame = audio_buffers_swap_active_buffer(*double_buffer);
+          c_audio <: p_in_frame;
+          p_in_frame = new_frame;
+        }
       }
       break;
 
@@ -148,29 +157,9 @@ void buffer_manager_to_tdm(server i2s_callback_if tdm,
           c_audio :> sample_out_buf;
         }
         sample = sample_out_buf[send_count];
-        if ((index & 1) == 0) {
-          int32_t stereo_sample_average =
-             (sample_out_buf[send_count] >> 1) + (sample_out_buf[send_count + 1] >> 1);
-
-          int is_active = (stereo_sample_average > sound_activity_threshold ||
-                           stereo_sample_average < -sound_activity_threshold);
-
-          channel_mask |= (is_active << (index >> 1));
-        }
         send_count++;
-        if (send_count == (AVB_NUM_MEDIA_OUTPUTS/8)) send_count = 0;
-        if (index == (AVB_NUM_MEDIA_INPUTS-7)) {
-          tmr :> p_in_frame->timestamp;
-          audio_frame_t *unsafe new_frame = audio_buffers_swap_active_buffer(*double_buffer);
-          c_audio <: p_in_frame;
-          p_in_frame = new_frame; // TODO should this be done beore  c_audio <: p_in_frame; ?
-          sound_activity_update++;
-          if (sound_activity_update == sound_activity_update_interval) {
-            //c_sound_activity <: channel_mask;
-            //soutct(c_sound_activity, XS1_CT_PAUSE);
-            sound_activity_update = 0;
-            channel_mask = 0;
-          }
+        if (send_count == (8)) {
+            send_count = 0;
         }
       }
       break; // End of send
@@ -376,7 +365,7 @@ int main(void)
     on tile[0]: [[distribute]] output_gpio(i_gpio, 4, p_audio_shared, gpio_pin_map);
 
     on tile[0]: {
-      tdm_master(i_tdm, AVB_NUM_MEDIA_OUTPUTS/8, AVB_NUM_MEDIA_INPUTS/8, c_data, oChan, p_tdm_fsync);
+      tdm_master(i_tdm, AVB_NUM_MEDIA_OUTPUTS/8, AVB_NUM_MEDIA_INPUTS/8, c_data, oChan, p_tdm_fsync, p_trace_adat_rx);
     }
 
 #if 1
@@ -395,9 +384,15 @@ int main(void)
 
     //on tile[1]: adatRxBuffer(oChan, c_dig_rx);
 
-    on tile[1]: while(1) {
-        adatReceiver48000(p, oChan);
-        debug_printf("adat rx lost lock\n");
+    on tile[1]: {
+        set_thread_fast_mode_on();
+        /* Can't use REF clock on L-series as this is usb clock */
+        set_port_clock(p_adat_rx, clk_adat_rx);
+        start_clock(clk_adat_rx);
+        while(1) {
+            adatReceiver48000(p_adat_rx, oChan);
+            debug_printf("adat rx lost lock\n");
+        }
     }
 
 #else

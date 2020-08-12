@@ -142,8 +142,8 @@ void audio_buffer_manager(streaming chanend c_audio,
       if (audio_io_type == AUDIO_I2S_IO) {
         c_audio <: (int32_t *unsafe)&sample_out_buf;
       }
-      else {
-        for (int i=0; i < 2; i++) {
+      else { // TDM
+        for (int i=0; i < 1; i++) { // FIXME: This should be number of TDM lines
           c_audio <: (int32_t *unsafe)&sample_out_buf;
         }
       }
@@ -178,7 +178,7 @@ void audio_buffer_manager(streaming chanend c_audio,
                 }
                 c_audio <: (int32_t *unsafe)&sample_out_buf;
               }
-              else {
+              else { // TDM
                 #pragma loop unroll
                 for (int i=0;i<AVB_NUM_SINKS;i++) { // FIXME: This should be number of TDM lines
                   int index = channel + (i*8);
