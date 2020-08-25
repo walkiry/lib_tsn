@@ -54,12 +54,16 @@ clock clk_tdm_mclk = on tile[0]: XS1_CLKBLK_4;
 
 
 // ADAT tx
+#ifdef REFERENCE_DESIGN
 on tile[0]: out buffered port:32 adat_port = XS1_PORT_1E;
+#else
+on tile[0]: out buffered port:32 adat_port = XS1_PORT_1I;
+#endif
 clock mck_blk = on tile[0]: XS1_CLKBLK_5;
 
 // ADAT rx
 #if 1
-on tile[1]: buffered in port:32 p = XS1_PORT_1M; // on the reference design this port is connected to midi, though it can not be used for testing on that device.
+on tile[1]: buffered in port:32 p = XS1_PORT_1M; // on the reference design this port is connected to midi, therefore it can not be used for testing on that device.
 #else
 on tile[0]: buffered in port:32 p = XS1_PORT_1M; // on reference design not connected to opt tx!
 #endif

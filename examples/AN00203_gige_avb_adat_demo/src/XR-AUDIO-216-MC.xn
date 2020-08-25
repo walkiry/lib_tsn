@@ -45,11 +45,13 @@
     </Link>
   </Links>
   <ExternalDevices>
-    <Device NodeId="0" Tile="0" Class="SQIFlash" Name="bootFlash" Type="S25FL116K">
-      <Attribute Name="PORT_SQI_CS" Value="PORT_SQI_CS"/>
-      <Attribute Name="PORT_SQI_SCLK"   Value="PORT_SQI_SCLK"/>
-      <Attribute Name="PORT_SQI_SIO"  Value="PORT_SQI_SIO"/>
-    </Device>
+	<Device NodeId="0" Tile="0" Class="SQIFlash" Name="bootFlash" Type="IS25LP080D">
+  		<Attribute Name="PORT_SQI_CS" Value="PORT_SQI_CS"/>
+  		<Attribute Name="PORT_SQI_SCLK"   Value="PORT_SQI_SCLK"/>
+  		<Attribute Name="PORT_SQI_SIO"  Value="PORT_SQI_SIO"/>
+  		<Attribute Name="QE_REGISTER" Value="quad_spi_qe_location_status_reg_0"/>
+  		<Attribute Name="QE_BIT" Value="quad_spi_qe_bit_6"/>
+	</Device>
   </ExternalDevices>
   <JTAGChain>
     <JTAGDevice NodeId="0"/>
