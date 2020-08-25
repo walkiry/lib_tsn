@@ -442,24 +442,37 @@ int main(void)
                                   AVB_NUM_SINKS,
                                   i_audio_out_push);
 
-
     on tile[0]: {
-      char mac_address[6];
-      if (otp_board_info_get_mac(otp_ports0, 0, mac_address) == 0) {
-        fail("No MAC address programmed in OTP");
-      }
-      i_eth_cfg[MAC_CFG_TO_AVB_MANAGER].set_macaddr(0, mac_address);
-      [[combine]]
-      par {
-        avb_manager(i_avb, NUM_AVB_MANAGER_CHANS,
+        char mac_address[6];
+        if (otp_board_info_get_mac(otp_ports0, 0, mac_address) == 0) {
+          //fail("No MAC address programmed in OTP");
+          debug_printf("No MAC address programmed in OTP\n");
+          mac_address[0] = 0x0;
+          mac_address[1] = 0x22;
+          mac_address[2] = 0x97;
+          mac_address[3] = 0x80;
+          mac_address[4] = 0x0E;
+          mac_address[5] = 0xA2;
+        }
+        debug_printf("MAC address %x:%x:%x:%x:%x:%x\n",
+                mac_address[0],
+                mac_address[1],
+                mac_address[2],
+                mac_address[3],
+                mac_address[4],
+                mac_address[5]);
+        i_eth_cfg[MAC_CFG_TO_AVB_MANAGER].set_macaddr(0, mac_address);
+        [[combine]]
+        par {
+            avb_manager(i_avb, NUM_AVB_MANAGER_CHANS,
                      null,
                      c_media_ctl,
                      c_listener_ctl,
                      c_talker_ctl,
                      i_eth_cfg[MAC_CFG_TO_AVB_MANAGER],
                      i_media_clock_ctl);
-        application_task(i_avb[AVB_MANAGER_TO_DEMO], i_1722_1_entity, 0);
-        avb_1722_1_maap_srp_task(i_avb[AVB_MANAGER_TO_1722_1],
+            application_task(i_avb[AVB_MANAGER_TO_DEMO], i_1722_1_entity, 0);
+            avb_1722_1_maap_srp_task(i_avb[AVB_MANAGER_TO_1722_1],
                                 i_1722_1_entity,
                                 qspi_ports,
                                 i_eth_rx_lp[MAC_TO_1722_1],
