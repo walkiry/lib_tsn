@@ -182,6 +182,7 @@ void avb_1722_1_maap_srp_task(client interface avb_interface i_avb,
       // Receive and process any incoming AVB packets (802.1Qat, 1722_MAAP)
       case i_eth_rx.packet_ready():
       {
+        //debug_printf("packet rcv\n");
         ethernet_packet_info_t packet_info;
         i_eth_rx.get_packet(packet_info, (char *)buf, ETHERNET_MAX_PACKET_SIZE);
         avb_process_srp_control_packet(i_avb, buf, packet_info.len, packet_info.type, i_eth_tx, packet_info.src_ifnum);
