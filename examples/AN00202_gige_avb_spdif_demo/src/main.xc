@@ -36,8 +36,6 @@ on tile[1]: port p_smi_mdio = XS1_PORT_1C;
 on tile[1]: port p_smi_mdc = XS1_PORT_1D;
 on tile[1]: port p_eth_reset = XS1_PORT_4A;
 
-on tile[1]: out port p_leds_row = XS1_PORT_4C;
-on tile[1]: out port p_leds_column = XS1_PORT_4D;
 on tile[0]: port p_i2c = XS1_PORT_4A;
 
 // I2S ports and clocks
@@ -45,11 +43,12 @@ on tile[0]: out buffered port:32 p_fs[1] = { XS1_PORT_1A }; // Low frequency PLL
 on tile[0]: out buffered port:32 p_i2s_lrclk = XS1_PORT_1G;
 on tile[0]: out buffered port:32 p_i2s_bclk = XS1_PORT_1H;
 on tile[0]: in port p_i2s_mclk = XS1_PORT_1F;
-on tile[0]: out buffered port:32 p_aud_dout[4] = {XS1_PORT_1M, XS1_PORT_1N, XS1_PORT_1O, XS1_PORT_1P};
-on tile[0]: out port p_spdif_tx = XS1_PORT_1D; // 1E on reference design is optical output, 1D is OAX_TX
-on tile[0]: in buffered port:32 p_aud_din[4] = {XS1_PORT_1I, XS1_PORT_1J, XS1_PORT_1K, XS1_PORT_1L};
+on tile[0]: out buffered port:32 p_aud_dout[1] = {XS1_PORT_1J};
+on tile[0]: in buffered port:32 p_aud_din[1] = {XS1_PORT_1L};
 on tile[0]: clock clk_i2s_bclk = XS1_CLKBLK_3;
 on tile[0]: clock clk_i2s_mclk = XS1_CLKBLK_4;
+// SPDIF
+on tile[0]: out port p_spdif_tx = XS1_PORT_1I; // 1E on reference design is optical output, 1D is OAX_TX - 1I on custom board
 on tile[0]: clock clk_spdif_mclk = XS1_CLKBLK_5;
 
 on tile[0]: out port p_audio_shared = XS1_PORT_8C;
@@ -279,7 +278,6 @@ void ar8035_phy_driver(client interface smi_if smi,
   p_eth_reset <: 0;
   delay_milliseconds(phy_reset_delay_ms);
   p_eth_reset <: 0xf;
-  p_leds_column <: 0x1;
 
   eth.set_ingress_timestamp_latency(0, LINK_1000_MBPS_FULL_DUPLEX, 200);
   eth.set_egress_timestamp_latency(0, LINK_1000_MBPS_FULL_DUPLEX, 200);
@@ -322,11 +320,6 @@ void ar8035_phy_driver(client interface smi_if smi,
       t += link_poll_period_ms * XS1_TIMER_KHZ;
       break;
     case c_sound_activity :> channel_mask:
-      break;
-    case tmr2 when timerafter(t2) :> void:
-      p_leds_row <: ~(flashing_on * channel_mask);
-      flashing_on ^= 1;
-      t2 += 10000000;
       break;
     }
   }
@@ -506,11 +499,25 @@ int main(void)
                                   i_audio_out_push);
 
     on tile[0]: {
-      char mac_address[6];
-      if (otp_board_info_get_mac(otp_ports0, 0, mac_address) == 0) {
-        fail("No MAC address programmed in OTP");
-      }
-      i_eth_cfg[MAC_CFG_TO_AVB_MANAGER].set_macaddr(0, mac_address);
+        char mac_address[6];
+        if (otp_board_info_get_mac(otp_ports0, 0, mac_address) == 0) {
+          //fail("No MAC address programmed in OTP");
+          debug_printf("No MAC address programmed in OTP\n");
+          mac_address[0] = 0x0;
+          mac_address[1] = 0x22;
+          mac_address[2] = 0x97;
+          mac_address[3] = 0x80;
+          mac_address[4] = 0x0E;
+          mac_address[5] = 0xA2;
+        }
+        debug_printf("MAC address %x:%x:%x:%x:%x:%x\n",
+                mac_address[0],
+                mac_address[1],
+                mac_address[2],
+                mac_address[3],
+                mac_address[4],
+                mac_address[5]);
+        i_eth_cfg[MAC_CFG_TO_AVB_MANAGER].set_macaddr(0, mac_address);
       [[combine]]
       par {
         avb_manager(i_avb, NUM_AVB_MANAGER_CHANS,

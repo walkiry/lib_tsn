@@ -1226,4 +1226,5 @@
 		<project id="AN00202_gige_avb_spdif_demo.null.249322235" name="AN00202_gige_avb_spdif_demo"/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="refreshScope"/>
 </cproject>
