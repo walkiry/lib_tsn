@@ -138,6 +138,9 @@ void avb_1722_1_maap_srp_task(client interface avb_interface i_avb,
   else if (fl_connect(qspi_ports)) {
     fail("Could not connect to flash");
   }
+  else {
+    debug_printf("succesfully connected to flash\n");
+  }
 #endif
 
   srp_store_ethernet_interface(i_eth_tx);
@@ -226,6 +229,9 @@ void avb_1722_1_maap_task(otp_ports_t &?otp_ports,
   }
   else if (fl_connect(qspi_ports)) {
     fail("Could not connect to flash");
+  }
+  else {
+    debug_printf("succesfully connected to flash\n");
   }
 #endif
 

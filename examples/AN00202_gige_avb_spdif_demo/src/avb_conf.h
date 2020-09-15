@@ -75,13 +75,15 @@ enum aem_control_indices {
 /** Enable 1722.1 Entity Firmware Update functionality on the entity. */
 /* Note: Make sur that C:\Program Files (x86)\XMOS\xTIMEcomposer\Community_14.3.3\target\include\QuadSpecEnum.h
  * and C:\Program Files (x86)\XMOS\xTIMEcomposer\Community_14.3.3\target\include\QuadSpecMacros.h contain the flash you are using!
- * Solved with xtimeComposer 14.4
+ * Solved with xtimeComposer 14.4!
+ * Make sure that boot partition size is set by xflash!
  */
 #define AVB_1722_1_FIRMWARE_UPGRADE_ENABLED 1
 /** Enable 1722.1 ACMP fast connect functionality on the entity. */
 /* Note: Make sur that C:\Program Files (x86)\XMOS\xTIMEcomposer\Community_14.3.3\target\include\QuadSpecEnum.h
  * and C:\Program Files (x86)\XMOS\xTIMEcomposer\Community_14.3.3\target\include\QuadSpecMacros.h contain the flash you are using!
- * Solved with xtimeComposer 14.4
+ * Solved with xtimeComposer 14.4!
+ * Make sure that boot partition size is set by xflash!
  */
 #define AVB_1722_1_FAST_CONNECT_ENABLED 1
 /** Enable 1722.1 Controller functionality on the entity. */
