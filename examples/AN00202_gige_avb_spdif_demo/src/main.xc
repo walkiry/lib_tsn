@@ -501,14 +501,7 @@ int main(void)
     on tile[0]: {
         char mac_address[6];
         if (otp_board_info_get_mac(otp_ports0, 0, mac_address) == 0) {
-          //fail("No MAC address programmed in OTP");
-          debug_printf("No MAC address programmed in OTP\n");
-          mac_address[0] = 0x0;
-          mac_address[1] = 0x22;
-          mac_address[2] = 0x97;
-          mac_address[3] = 0x80;
-          mac_address[4] = 0x0E;
-          mac_address[5] = 0xA2;
+          fail("No MAC address programmed in OTP");
         }
         debug_printf("MAC address %x:%x:%x:%x:%x:%x\n",
                 mac_address[0],
