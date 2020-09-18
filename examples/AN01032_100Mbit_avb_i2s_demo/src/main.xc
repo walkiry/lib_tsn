@@ -126,8 +126,8 @@ void buffer_manager_to_i2s(server i2s_callback_if i2s,
       * bit[0] : Power Down (PDN)               : Power down device
       */    
 
-      i2c.write_reg(codec1_addr, CODEC_PWR_CTRL_ADDR, 0x01);       
-      i2c.write_reg(codec2_addr, CODEC_PWR_CTRL_ADDR, 0x01);       
+      i2c.write_reg(codec1_addr, CODEC_PWR_CTRL_ADDR, 0x01);
+      i2c.write_reg(codec2_addr, CODEC_PWR_CTRL_ADDR, 0x01);
 
       /* Mode Control (Address: 0x03) */
       /* bit[7:6] : RESERVED                    :
@@ -136,8 +136,8 @@ void buffer_manager_to_i2s(server i2s_callback_if i2s,
       * bit[0]   : Popguard Transient Control   : Enabled
       */    
 
-      i2c.write_reg(codec1_addr, CODEC_MODE_CTRL_ADDR, 0x35); 
-      i2c.write_reg(codec2_addr, CODEC_MODE_CTRL_ADDR, 0x35);     
+      i2c.write_reg(codec1_addr, CODEC_MODE_CTRL_ADDR, 0x35);
+      i2c.write_reg(codec2_addr, CODEC_MODE_CTRL_ADDR, 0x35);
 
       /* ADC and DAC Control (Address: 0x04) */
       /*bit[7] : High Pass Filter Freeze CH A : Continuous value
@@ -147,8 +147,8 @@ void buffer_manager_to_i2s(server i2s_callback_if i2s,
       * bit[0] : ADC Digital Interface Format : I2S, up to 24-bit data
       */   
 
-      i2c.write_reg(codec1_addr, CODEC_ADC_DAC_CTRL_ADDR, 0x09); 
-      i2c.write_reg(codec2_addr, CODEC_ADC_DAC_CTRL_ADDR, 0x09);           
+      i2c.write_reg(codec1_addr, CODEC_ADC_DAC_CTRL_ADDR, 0x09);
+      i2c.write_reg(codec2_addr, CODEC_ADC_DAC_CTRL_ADDR, 0x09);
           
       /* Transition Control (Address: 0x05) */
       /*bit[7] : DAC Single Volume (DAC_SNGL_VOL)   : Signal volume enabled
@@ -158,8 +158,8 @@ void buffer_manager_to_i2s(server i2s_callback_if i2s,
       * bit[0] : De-Emphasis Control (DE_EMPH)      : No De-emphasis applied
       */ 
 
-      i2c.write_reg(codec1_addr, CODEC_TRAN_CTRL_ADDR, 0x60); 
-      i2c.write_reg(codec2_addr, CODEC_TRAN_CTRL_ADDR, 0x60);   
+      i2c.write_reg(codec1_addr, CODEC_TRAN_CTRL_ADDR, 0x60);
+      i2c.write_reg(codec2_addr, CODEC_TRAN_CTRL_ADDR, 0x60);
 
       /* Mute Control (Address: 0x06) */
       /*bit[7:6]: RESERVED                          : 
@@ -169,26 +169,26 @@ void buffer_manager_to_i2s(server i2s_callback_if i2s,
       * bit[1:0]: DAC Channel Mute (MUTE_DAC_CHA/B) : Disabled
       */ 
 
-      i2c.write_reg(codec1_addr, CODEC_TRAN_CTRL_ADDR, 0x00); 
+      i2c.write_reg(codec1_addr, CODEC_TRAN_CTRL_ADDR, 0x00);
       i2c.write_reg(codec2_addr, CODEC_TRAN_CTRL_ADDR, 0x00);
 
       /*  DAC Channel A Volume Control (Address: 0x7) */
       /*bit[7:0]: DAC Channel A Volume Control     : 0dB
       */ 
 
-      i2c.write_reg(codec1_addr, CODEC_DACA_VOL_ADDR, 0x00); 
+      i2c.write_reg(codec1_addr, CODEC_DACA_VOL_ADDR, 0x00);
       i2c.write_reg(codec2_addr, CODEC_DACA_VOL_ADDR, 0x00);
 
       /*  DAC Channel B Volume Control (Address: 0x8) */
       /*bit[7:0]: DAC Channel B Volume Control     : 0dB
       */ 
 
-      i2c.write_reg(codec1_addr, CODEC_DACB_VOL_ADDR, 0x00); 
+      i2c.write_reg(codec1_addr, CODEC_DACB_VOL_ADDR, 0x00);
       i2c.write_reg(codec2_addr, CODEC_DACB_VOL_ADDR, 0x00);
 
       /* Power Control (Address: 0x02) */
       /* Disable the Device power down */
-      i2c.write_reg(codec1_addr, CODEC_PWR_CTRL_ADDR, 0x00);       
+      i2c.write_reg(codec1_addr, CODEC_PWR_CTRL_ADDR, 0x00);
       i2c.write_reg(codec2_addr, CODEC_PWR_CTRL_ADDR, 0x00);
 
       /* LEDS */

@@ -5,7 +5,9 @@
 #include <string.h>
 #include <xscope.h>
 #include "gpio.h"
-#include "i2s.h"
+#include "adat.h"
+#include "adat_tx.h"
+#include "adat_rx.h"
 #include "i2c.h"
 #include "avb.h"
 #include "audio_clock_CS2100CP.h"
@@ -38,65 +40,41 @@ on tile[1]: port p_eth_reset = XS1_PORT_4A;
 on tile[1]: out port p_leds_row = XS1_PORT_4C;
 on tile[1]: out port p_leds_column = XS1_PORT_4D;
 
+
 on tile[0]: port p_i2c = XS1_PORT_4A;
 
 // TDM ports and clocks
 on tile[0]: out buffered port:32 p_fs[1] = { XS1_PORT_1A }; // Low frequency PLL frequency reference
-on tile[0]: out buffered port:32 p_tdm_fsync = XS1_PORT_1G;
+on tile[0]: out buffered port:32 p_tdm_fsync = XS1_PORT_1G; // TODO activate wordclock again!
 on tile[0]: out buffered port:32 p_tdm_bclk = XS1_PORT_1H;
 on tile[0]: in port p_tdm_mclk = XS1_PORT_1F;
 
 clock clk_tdm_bclk = on tile[0]: XS1_CLKBLK_3;
 clock clk_tdm_mclk = on tile[0]: XS1_CLKBLK_4;
 
-on tile[0]: out buffered port:32 p_aud_dout[4] = {XS1_PORT_1M, XS1_PORT_1N, XS1_PORT_1O, XS1_PORT_1P};
-on tile[0]: in buffered port:32 p_aud_din[4] = {XS1_PORT_1I, XS1_PORT_1J, XS1_PORT_1K, XS1_PORT_1L};
+
+// ADAT tx
+#ifdef REFERENCE_DESIGN
+on tile[0]: out buffered port:32 adat_port = XS1_PORT_1E;
+#else
+on tile[0]: out buffered port:32 adat_port = XS1_PORT_1I;
+#endif
+clock mck_blk = on tile[0]: XS1_CLKBLK_5;
+
+// ADAT rx
+#if 1
+on tile[1]: buffered in port:32 p = XS1_PORT_1M; // on the reference design this port is connected to midi, therefore it can not be used for testing on that device.
+#else
+on tile[0]: buffered in port:32 p = XS1_PORT_1M; // on reference design not connected to opt tx!
+#endif
 
 on tile[0]: out port p_audio_shared = XS1_PORT_8C;
-
-#define CS5368_ADDR           0x4C // I2C address of the CS5368 DAC
-#define CS5368_CHIP_REV       0x00 // DAC register addresses...
-#define CS5368_GCTL_MDE       0x01
-#define CS5368_OVFL_ST        0x02
-
-#define CS4384_ADDR           0x18 // I2C address of the CS4384 ADC
-#define CS4384_CHIP_REV       0x01 // ADC register addresses...
-#define CS4384_MODE_CTRL      0x02
-#define CS4384_PCM_CTRL       0x03
-#define CS4384_DSD_CTRL       0x04
-#define CS4384_FLT_CTRL       0x05
-#define CS4384_INV_CTRL       0x06
-#define CS4384_GRP_CTRL       0x07
-#define CS4384_RMP_MUTE       0x08
-#define CS4384_MUTE_CTRL      0x09
-#define CS4384_MIX_PR1        0x0a
-#define CS4384_VOL_A1         0x0b
-#define CS4384_VOL_B1         0x0c
-#define CS4384_MIX_PR2        0x0d
-#define CS4384_VOL_A2         0x0e
-#define CS4384_VOL_B2         0x0f
-#define CS4384_MIX_PR3        0x10
-#define CS4384_VOL_A3         0x11
-#define CS4384_VOL_B3         0x12
-#define CS4384_MIX_PR4        0x13
-#define CS4384_VOL_A4         0x14
-#define CS4384_VOL_B4         0x15
-#define CS4384_CM_MODE        0x16
-#define CS5368_CHIP_REV       0x00
-#define CS5368_GCTL_MDE       0x01
-#define CS5368_OVFL_ST        0x02
-#define CS5368_OVFL_MSK       0x03
-#define CS5368_HPF_CTRL       0x04
-#define CS5368_PWR_DN         0x06
-#define CS5368_MUTE_CTRL      0x08
-#define CS5368_SDO_EN         0x0a
 
 #pragma unsafe arrays
 [[always_inline]][[distributable]]
 void buffer_manager_to_tdm(server i2s_callback_if tdm,
                            streaming chanend c_audio,
                            client interface i2c_master_if i2c,
-                           streaming chanend c_sound_activity,
                            int synth_sinewave_channel_mask,
                            client output_gpio_if dac_reset,
                            client output_gpio_if adc_reset,
@@ -138,53 +116,8 @@ void buffer_manager_to_tdm(server i2s_callback_if tdm,
       // Take DAC out of reset
       dac_reset.output(1);
 
-      /* Mode Control 1 (Address: 0x02) */
-      /* bit[7] : Control Port Enable (CPEN)     : Set to 1 for enable
-       * bit[6] : Freeze controls (FREEZE)       : Set to 1 for freeze
-       * bit[5] : PCM/DSD Selection (DSD/PCM)    : Set to 0 for PCM
-       * bit[4:1] : DAC Pair Disable (DACx_DIS)  : All Dac Pairs enabled
-       * bit[0] : Power Down (PDN)               : Powered down
-       */
-      i2c.write_reg(CS4384_ADDR, CS4384_MODE_CTRL, 0b11000001);
-
-      /* PCM Control (Address: 0x03) */
-      /* bit[7:4] : Digital Interface Format (DIF) : 0b1100 for TDM
-       * bit[3:2] : Reserved
-       * bit[1:0] : Functional Mode (FM) : 0x11 for auto-speed detect (32 to 200kHz)
-      */
-      i2c.write_reg(CS4384_ADDR, CS4384_PCM_CTRL, 0b11000111);
-
-      /* Mode Control 1 (Address: 0x02) */
-      /* bit[7] : Control Port Enable (CPEN)     : Set to 1 for enable
-       * bit[6] : Freeze controls (FREEZE)       : Set to 0 for freeze
-       * bit[5] : PCM/DSD Selection (DSD/PCM)    : Set to 0 for PCM
-       * bit[4:1] : DAC Pair Disable (DACx_DIS)  : All Dac Pairs enabled
-       * bit[0] : Power Down (PDN)               : Not powered down
-       */
-      i2c.write_reg(CS4384_ADDR, CS4384_MODE_CTRL, 0b10000000);
-
       // Take ADC out of reset
       adc_reset.output(1);
-
-      unsigned adc_dif = 0x02; // TDM mode
-      unsigned adc_mode = 0x03;    /* Slave mode all speeds */
-
-      /* Reg 0x01: (GCTL) Global Mode Control Register */
-      /* Bit[7]: CP-EN: Manages control-port mode
-       * Bit[6]: CLKMODE: Setting puts part in 384x mode
-       * Bit[5:4]: MDIV[1:0]: Set to 01 for /2
-       * Bit[3:2]: DIF[1:0]: Data Format: 0x01 for I2S, 0x02 for TDM
-       * Bit[1:0]: MODE[1:0]: Mode: 0x11 for slave mode
-       */
-      i2c.write_reg(CS5368_ADDR, CS5368_GCTL_MDE, 0b10010000 | (adc_dif << 2) | adc_mode);
-
-      /* Reg 0x06: (PDN) Power Down Register */
-      /* Bit[7:6]: Reserved
-       * Bit[5]: PDN-BG: When set, this bit powers-own the bandgap reference
-       * Bit[4]: PDM-OSC: Controls power to internal oscillator core
-       * Bit[3:0]: PDN: When any bit is set all clocks going to that channel pair are turned off
-       */
-      i2c.write_reg(CS5368_ADDR, CS5368_PWR_DN, 0b00000000);
 
       unsafe {
         c_audio :> double_buffer;
@@ -234,11 +167,11 @@ void buffer_manager_to_tdm(server i2s_callback_if tdm,
           tmr :> p_in_frame->timestamp;
           audio_frame_t *unsafe new_frame = audio_buffers_swap_active_buffer(*double_buffer);
           c_audio <: p_in_frame;
-          p_in_frame = new_frame;
+          p_in_frame = new_frame; // TODO should this be done beore  c_audio <: p_in_frame; ?
           sound_activity_update++;
           if (sound_activity_update == sound_activity_update_interval) {
-            c_sound_activity <: channel_mask;
-            soutct(c_sound_activity, XS1_CT_PAUSE);
+            //c_sound_activity <: channel_mask;
+            //soutct(c_sound_activity, XS1_CT_PAUSE);
             sound_activity_update = 0;
             channel_mask = 0;
           }
@@ -252,8 +185,7 @@ void buffer_manager_to_tdm(server i2s_callback_if tdm,
 
 [[combinable]]
 void ar8035_phy_driver(client interface smi_if smi,
-                client interface ethernet_cfg_if eth,
-                streaming chanend c_sound_activity)
+                client interface ethernet_cfg_if eth)
 {
   ethernet_link_state_t link_state = ETHERNET_LINK_DOWN;
   ethernet_speed_t link_speed = LINK_1000_MBPS_FULL_DUPLEX;
@@ -295,7 +227,7 @@ void ar8035_phy_driver(client interface smi_if smi,
   smi.write_reg(phy_address, 0x0D, 0x4003);
   smi.write_reg(phy_address, 0x0E, 0);
 
-  smi_configure(smi, phy_address, LINK_1000_MBPS_FULL_DUPLEX, SMI_ENABLE_AUTONEG);
+  smi_configure(smi, phy_address, LINK_100_MBPS_FULL_DUPLEX, SMI_ENABLE_AUTONEG);
   // Periodically check the link status
   while (1) {
     select {
@@ -310,8 +242,6 @@ void ar8035_phy_driver(client interface smi_if smi,
         eth.set_link_state(0, new_state, link_speed);
       }
       t += link_poll_period_ms * XS1_TIMER_KHZ;
-      break;
-    case c_sound_activity :> channel_mask:
       break;
     case tmr2 when timerafter(t2) :> void:
       p_leds_row <: ~(flashing_on * channel_mask);
@@ -391,6 +321,12 @@ int main(void)
   // PTP channels
   chan c_ptp[NUM_PTP_CHANS];
 
+  // ADAT
+  chan c_port;
+  chan c_data;
+  chan oChan;
+  chan c_dig_rx;
+
   // AVB unit control
   chan c_talker_ctl[AVB_NUM_TALKER_UNITS];
   chan c_listener_ctl[AVB_NUM_LISTENER_UNITS];
@@ -413,7 +349,7 @@ int main(void)
   interface pull_if i_audio_in_pull;
   interface push_if i_audio_out_push;
   interface pull_if i_audio_out_pull;
-  streaming chan c_sound_activity;
+  //streaming chan c_sound_activity;
 
   par
   {
@@ -425,7 +361,7 @@ int main(void)
                                    ETHERNET_DISABLE_SHAPER);
 
     on tile[1].core[0]: rgmii_ethernet_mac_config(i_eth_cfg, NUM_ETH_CFG_CLIENTS, c_rgmii_cfg);
-    on tile[1].core[0]: ar8035_phy_driver(i_smi, i_eth_cfg[MAC_CFG_TO_PHY_DRIVER], c_sound_activity);
+    on tile[1].core[0]: ar8035_phy_driver(i_smi, i_eth_cfg[MAC_CFG_TO_PHY_DRIVER]);
 
     on tile[1]: [[distribute]] smi(i_smi, p_smi_mdio, p_smi_mdc);
 
@@ -444,14 +380,47 @@ int main(void)
     on tile[0]: [[distribute]] output_gpio(i_gpio, 4, p_audio_shared, gpio_pin_map);
 
     on tile[0]: {
-      configure_clock_src_divide(clk_tdm_bclk, p_tdm_mclk, 1);
-      configure_port_clock_output(p_tdm_bclk, clk_tdm_bclk);
-
-      tdm_master(i_tdm, p_tdm_fsync, p_aud_dout, AVB_NUM_MEDIA_OUTPUTS/8, p_aud_din, AVB_NUM_MEDIA_INPUTS/8,
-                 clk_tdm_bclk);
+      tdm_master(i_tdm, AVB_NUM_MEDIA_OUTPUTS/8, AVB_NUM_MEDIA_INPUTS/8, c_data, oChan, p_tdm_fsync);
     }
 
-    on tile[0]: [[distribute]] buffer_manager_to_tdm(i_tdm, c_audio, i_i2c[I2S_TO_I2C], c_sound_activity, 0x3,
+#if 1
+    on tile[0]: adat_tx(c_data, c_port);
+
+    on tile[0]: {
+      set_clock_src(mck_blk, p_tdm_mclk);
+      set_port_clock(adat_port, mck_blk);
+      set_clock_fall_delay(mck_blk, 7);  // XAI2 board
+      start_clock(mck_blk);
+      while (1) {
+        unsigned sample = inuint(c_port);
+        adat_port <: byterev(sample);
+      }
+    }
+
+    //on tile[1]: adatRxBuffer(oChan, c_dig_rx);
+
+    on tile[1]: while(1) {
+        adatReceiver48000(p, oChan);
+        debug_printf("adat rx lost lock\n");
+    }
+
+#else
+    on tile[0]: {
+        set_clock_src(mck_blk, p_tdm_mclk);
+        set_port_clock(adat_port, mck_blk);
+        set_clock_fall_delay(mck_blk, 7);  // XAI2 board
+        start_clock(mck_blk);
+        adat_tx_port(c_data, adat_port);
+    }
+
+    on tile[0]: while(1) {
+        adatReceiver48000(p, oChan);
+    }
+#endif
+
+    #define SYNTH_SINEWAVE_CHANNEL_MASK 0x0 //0x3
+
+    on tile[0]: [[distribute]] buffer_manager_to_tdm(i_tdm, c_audio, i_i2c[I2S_TO_I2C], SYNTH_SINEWAVE_CHANNEL_MASK,
                                                      i_gpio[0], i_gpio[1], i_gpio[2], i_gpio[3]);
 
     on tile[0]: audio_buffer_manager(c_audio, i_audio_in_push, i_audio_out_pull, c_media_ctl[0], AUDIO_TDM_IO);
@@ -473,24 +442,37 @@ int main(void)
                                   AVB_NUM_SINKS,
                                   i_audio_out_push);
 
-
     on tile[0]: {
-      char mac_address[6];
-      if (otp_board_info_get_mac(otp_ports0, 0, mac_address) == 0) {
-        fail("No MAC address programmed in OTP");
-      }
-      i_eth_cfg[MAC_CFG_TO_AVB_MANAGER].set_macaddr(0, mac_address);
-      [[combine]]
-      par {
-        avb_manager(i_avb, NUM_AVB_MANAGER_CHANS,
+        char mac_address[6];
+        if (otp_board_info_get_mac(otp_ports0, 0, mac_address) == 0) {
+          //fail("No MAC address programmed in OTP");
+          debug_printf("No MAC address programmed in OTP\n");
+          mac_address[0] = 0x0;
+          mac_address[1] = 0x22;
+          mac_address[2] = 0x97;
+          mac_address[3] = 0x80;
+          mac_address[4] = 0x0E;
+          mac_address[5] = 0xA2;
+        }
+        debug_printf("MAC address %x:%x:%x:%x:%x:%x\n",
+                mac_address[0],
+                mac_address[1],
+                mac_address[2],
+                mac_address[3],
+                mac_address[4],
+                mac_address[5]);
+        i_eth_cfg[MAC_CFG_TO_AVB_MANAGER].set_macaddr(0, mac_address);
+        [[combine]]
+        par {
+            avb_manager(i_avb, NUM_AVB_MANAGER_CHANS,
                      null,
                      c_media_ctl,
                      c_listener_ctl,
                      c_talker_ctl,
                      i_eth_cfg[MAC_CFG_TO_AVB_MANAGER],
                      i_media_clock_ctl);
-        application_task(i_avb[AVB_MANAGER_TO_DEMO], i_1722_1_entity, 0);
-        avb_1722_1_maap_srp_task(i_avb[AVB_MANAGER_TO_1722_1],
+            application_task(i_avb[AVB_MANAGER_TO_DEMO], i_1722_1_entity, 0);
+            avb_1722_1_maap_srp_task(i_avb[AVB_MANAGER_TO_1722_1],
                                 i_1722_1_entity,
                                 qspi_ports,
                                 i_eth_rx_lp[MAC_TO_1722_1],
