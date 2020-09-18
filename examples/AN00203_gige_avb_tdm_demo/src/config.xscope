@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xSCOPEconfig enabled="true" ioMode="basic">
+    <!--Probe name="Media Output FIFO Fill" type="CONTINUOUS" datatype="INT" units="Value" enabled="true"/-->
+</xSCOPEconfig>
