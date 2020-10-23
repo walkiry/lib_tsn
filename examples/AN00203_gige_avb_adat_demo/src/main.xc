@@ -124,6 +124,11 @@ void buffer_manager_to_tdm(server i2s_callback_if tdm,
         c_audio :> double_buffer;
         p_in_frame = &double_buffer->buffer[double_buffer->active_buffer];
         c_audio :> int; // Ignore sample rate info
+
+        // For TDM Mode sample_out_buf is send twice from audio_buffer (see audiobuffering.xc)
+        c_audio :> sample_out_buf;
+        c_audio :> sample_out_buf;
+        c_audio :> sample_out_buf;
       }
       break;
 
@@ -136,6 +141,7 @@ void buffer_manager_to_tdm(server i2s_callback_if tdm,
        */
     case tdm.receive(size_t index, int32_t sample):
       unsafe {
+        //synth_sinewave_channel_mask = 0x3;
         if (synth_sinewave_channel_mask & (1 << index)) {
           p_in_frame->samples[index] = sinewave[sinewave_index];
         }
@@ -159,21 +165,21 @@ void buffer_manager_to_tdm(server i2s_callback_if tdm,
           c_audio :> sample_out_buf;
         }
 
-#if 1 //TONE_GEN_ON_SEND
+#if 0 //TONE_GEN_ON_SEND
         uint32_t synth_sinewave_send_channel_mask = 0x3;
-        if (synth_sinewave_send_channel_mask & (1 << send_count)) {
+        if (synth_sinewave_send_channel_mask & (1 << index)) {
             sample = sinewave[sinewave_send_index];
         }
         else {
-            sample = sample_out_buf[send_count];
+            sample = sample_out_buf[0];
         }
-        if (synth_sinewave_send_channel_mask && send_count == 0) {
+        if (synth_sinewave_send_channel_mask && index == 0) {
             sinewave_send_index++;
           if (sinewave_send_index == 256)
               sinewave_send_index = 0;
         }
 #else
-        sample = sample_out_buf[send_count];
+        sample = sample_out_buf[index];
 #endif
 
 
@@ -424,7 +430,7 @@ int main(void)
     on tile[0]: {
 
       unsigned frm_word_no = 0;
-      unsigned fsync_mask[ADAT_MAX_CHANNELS_PER_DATA_LINE] ={0};
+      unsigned fsync_mask[8] ={0};
 
       stop_clock(mck_blk);
       configure_out_port(p_tdm_fsync, mck_blk, 0);
@@ -459,8 +465,10 @@ int main(void)
       p_tdm_fsync @ port_time <: fsync_mask[0];
 
       while (1) {
-        unsigned sample = inuint(c_port);
-        adat_port <: byterev(sample);
+        unsigned sample1 = inuint(c_port);
+        adat_port <: byterev(sample1);
+        unsigned sample2 = inuint(c_port);
+        adat_port <: byterev(sample2);
         frm_word_no++;
         if( frm_word_no == channels_per_data_line )
             frm_word_no = 0;

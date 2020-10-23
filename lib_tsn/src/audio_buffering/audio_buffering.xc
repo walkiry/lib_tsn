@@ -142,8 +142,8 @@ void audio_buffer_manager(streaming chanend c_audio,
       if (audio_io_type == AUDIO_I2S_IO) {
         c_audio <: (int32_t *unsafe)&sample_out_buf;
       }
-      else {
-        for (int i=0; i < 2; i++) {
+      else { // TDM
+        for (int i=0; i < 2; i++) { // why 2?
           c_audio <: (int32_t *unsafe)&sample_out_buf;
         }
       }
@@ -165,6 +165,9 @@ void audio_buffer_manager(streaming chanend c_audio,
 
           default:
             unsafe {
+                /*
+                 * I2S Mode
+                 */
               if (audio_io_type == AUDIO_I2S_IO) {
                 #pragma loop unroll
                 for (int i=0;i<AVB_NUM_MEDIA_OUTPUTS;i+=2) {
@@ -178,9 +181,15 @@ void audio_buffer_manager(streaming chanend c_audio,
                 }
                 c_audio <: (int32_t *unsafe)&sample_out_buf;
               }
+
+              /*
+               * TDM MODE and ADAT Mode
+               */
               else {
+#if 0
+                  //TDM
                 #pragma loop unroll
-                for (int i=0;i<AVB_NUM_SINKS;i++) { // FIXME: This should be number of TDM lines
+                for (int i=0;i<AVB_NUM_SINKS;i++) { // FIXME: This should be number of TDM lines // or the number of media outputs?
                   int index = channel + (i*8);
                   sample_out_buf[i] = audio_output_fifo_pull_sample(h_out, index,
                                                                     timestamp);
@@ -188,6 +197,20 @@ void audio_buffer_manager(streaming chanend c_audio,
                 c_audio <: (int32_t *unsafe)&sample_out_buf;
                 channel++;
                 if (channel == 8) channel = 0;
+#else
+#pragma loop unroll
+                // ADAT
+                for (int i=0;i<AVB_NUM_MEDIA_OUTPUTS;i+=2) {
+                  sample_out_buf[i] = audio_output_fifo_pull_sample(h_out, i,
+                                                                    timestamp);
+                }
+                #pragma loop unroll
+                for (int i=1;i<AVB_NUM_MEDIA_OUTPUTS;i+=2) {
+                  sample_out_buf[i] = audio_output_fifo_pull_sample(h_out, i,
+                                                                    timestamp);
+                }
+                c_audio <: (int32_t *unsafe)&sample_out_buf;
+#endif
               }
             }
             break;
