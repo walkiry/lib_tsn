@@ -73,9 +73,9 @@ enum aem_control_indices {
     DESCRIPTOR_INDEX_CONTROL_IDENTIFY = 0,
 };
 /** Enable 1722.1 Entity Firmware Update functionality on the entity. */
-#define AVB_1722_1_FIRMWARE_UPGRADE_ENABLED 0
+#define AVB_1722_1_FIRMWARE_UPGRADE_ENABLED 1
 /** Enable 1722.1 ACMP fast connect functionality on the entity. */
-#define AVB_1722_1_FAST_CONNECT_ENABLED 0
+#define AVB_1722_1_FAST_CONNECT_ENABLED 1
 /** Enable 1722.1 Controller functionality on the entity. */
 #define AVB_1722_1_CONTROLLER_ENABLED 0
 
