@@ -89,6 +89,7 @@ void buffer_manager_to_tdm(server i2s_callback_if tdm,
   const int sound_activity_update_interval = 2500;
   int sound_activity_update = 0;
   int sinewave_index = 0;
+  int sinewave_send_index = 0;
   int channel_mask = 0;
   timer tmr;
 
@@ -130,6 +131,9 @@ void buffer_manager_to_tdm(server i2s_callback_if tdm,
       restart = I2S_NO_RESTART;
       break;
 
+      /*
+       * called when a new sample is read in by the ADAT component.
+       */
     case tdm.receive(size_t index, int32_t sample):
       unsafe {
         if (synth_sinewave_channel_mask & (1 << index)) {
@@ -146,12 +150,34 @@ void buffer_manager_to_tdm(server i2s_callback_if tdm,
       }
       break;
 
+      /*
+       * This callback will be called when the ADAT component needs a new sample.
+       */
     case tdm.send(size_t index) -> int32_t sample:
       unsafe {
-        if (send_count == 0) {
+        if (index == 0) {
           c_audio :> sample_out_buf;
         }
+
+#if 1 //TONE_GEN_ON_SEND
+        uint32_t synth_sinewave_send_channel_mask = 0x3;
+        if (synth_sinewave_send_channel_mask & (1 << send_count)) {
+            sample = sinewave[sinewave_send_index];
+        }
+        else {
+            sample = sample_out_buf[send_count];
+        }
+        if (synth_sinewave_send_channel_mask && send_count == 0) {
+            sinewave_send_index++;
+          if (sinewave_send_index == 256)
+              sinewave_send_index = 0;
+        }
+#else
         sample = sample_out_buf[send_count];
+#endif
+
+
+        /* signal present detection
         if ((index & 1) == 0) {
           int32_t stereo_sample_average =
              (sample_out_buf[send_count] >> 1) + (sample_out_buf[send_count + 1] >> 1);
@@ -161,13 +187,19 @@ void buffer_manager_to_tdm(server i2s_callback_if tdm,
 
           channel_mask |= (is_active << (index >> 1));
         }
-        send_count++;
-        if (send_count == (AVB_NUM_MEDIA_OUTPUTS/8)) send_count = 0;
-        if (index == (AVB_NUM_MEDIA_INPUTS-7)) {
+        */
+
+        //send_count++;
+
+        //if (send_count == (AVB_NUM_MEDIA_OUTPUTS/8)) send_count = 0;
+
+        if (index == (AVB_NUM_MEDIA_OUTPUTS-1)) {
           tmr :> p_in_frame->timestamp;
           audio_frame_t *unsafe new_frame = audio_buffers_swap_active_buffer(*double_buffer);
           c_audio <: p_in_frame;
-          p_in_frame = new_frame; // TODO should this be done beore  c_audio <: p_in_frame; ?
+          p_in_frame = new_frame;
+
+          /*
           sound_activity_update++;
           if (sound_activity_update == sound_activity_update_interval) {
             //c_sound_activity <: channel_mask;
@@ -175,6 +207,7 @@ void buffer_manager_to_tdm(server i2s_callback_if tdm,
             sound_activity_update = 0;
             channel_mask = 0;
           }
+          */
         }
       }
       break; // End of send
@@ -380,43 +413,68 @@ int main(void)
     on tile[0]: [[distribute]] output_gpio(i_gpio, 4, p_audio_shared, gpio_pin_map);
 
     on tile[0]: {
-      tdm_master(i_tdm, AVB_NUM_MEDIA_OUTPUTS/8, AVB_NUM_MEDIA_INPUTS/8, c_data, oChan, p_tdm_fsync);
+        //!parallel usage problem!    configure_clock_src_divide(clk_tdm_bclk, p_tdm_mclk, 1);
+        //configure_port_clock_output(p_tdm_bclk, clk_tdm_bclk);
+
+        tdm_master(i_tdm, AVB_NUM_MEDIA_OUTPUTS/8, AVB_NUM_MEDIA_INPUTS/8, c_data, oChan); //, p_tdm_fsync);//, clk_tdm_bclk);
     }
 
-#if 1
+    // ADAT TX
     on tile[0]: adat_tx(c_data, c_port);
-
     on tile[0]: {
+
+      unsigned frm_word_no = 0;
+      unsigned fsync_mask[ADAT_MAX_CHANNELS_PER_DATA_LINE] ={0};
+
+      stop_clock(mck_blk);
+      configure_out_port(p_tdm_fsync, mck_blk, 0);
+
+
+
       set_clock_src(mck_blk, p_tdm_mclk);
       set_port_clock(adat_port, mck_blk);
       set_clock_fall_delay(mck_blk, 7);  // XAI2 board
       start_clock(mck_blk);
+
+      /*
+      tdm_config.offset = -1;
+      tdm_config.sync_len = 1;
+      tdm_config.channels_per_frame = 8;
+      */
+      int offset = -1;
+      unsigned sclk_edge_count = 1;
+      unsigned channels_per_data_line = 8;
+
+      p_tdm_fsync <: 0;
+      make_fsync_mask(fsync_mask, offset, sclk_edge_count, channels_per_data_line);
+
+      unsigned port_time;
+      p_tdm_fsync <: 0 @ port_time;
+
+      port_time += 80;//lots!
+
+      if(offset < 0)
+          partout_timed(p_tdm_fsync, -offset, bitrev(fsync_mask[channels_per_data_line-1]), port_time + offset);
+
+      p_tdm_fsync @ port_time <: fsync_mask[0];
+
       while (1) {
         unsigned sample = inuint(c_port);
         adat_port <: byterev(sample);
+        frm_word_no++;
+        if( frm_word_no == channels_per_data_line )
+            frm_word_no = 0;
+        p_tdm_fsync <: fsync_mask[frm_word_no];
       }
     }
 
     //on tile[1]: adatRxBuffer(oChan, c_dig_rx);
 
+    // ADAT RX
     on tile[1]: while(1) {
         adatReceiver48000(p, oChan);
         debug_printf("adat rx lost lock\n");
     }
-
-#else
-    on tile[0]: {
-        set_clock_src(mck_blk, p_tdm_mclk);
-        set_port_clock(adat_port, mck_blk);
-        set_clock_fall_delay(mck_blk, 7);  // XAI2 board
-        start_clock(mck_blk);
-        adat_tx_port(c_data, adat_port);
-    }
-
-    on tile[0]: while(1) {
-        adatReceiver48000(p, oChan);
-    }
-#endif
 
     #define SYNTH_SINEWAVE_CHANNEL_MASK 0x0 //0x3
 

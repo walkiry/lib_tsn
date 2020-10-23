@@ -132,7 +132,7 @@ void audio_buffer_manager(streaming chanend c_audio,
       int done = 0;
       unsigned timestamp = 0;
       int channel = 0;
-      int32_t sample_out_buf[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+      int32_t sample_out_buf[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0}; // TODO Why is size 9?
       unsigned tmp;
       unsigned restart = 0;
 
