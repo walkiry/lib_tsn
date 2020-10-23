@@ -105,7 +105,7 @@ void buffer_manager_to_i2s(server i2s_callback_if i2s,
   const int sound_activity_threshold = 100000;
   const int sound_activity_update_interval = 2500;
   int sound_activity_update = 0;
-  int sinewave_index = 0;
+  int sinewave_index[AVB_NUM_MEDIA_INPUTS] = {0,0};
   int channel_mask = 0;
   timer tmr;
 
@@ -208,6 +208,7 @@ void buffer_manager_to_i2s(server i2s_callback_if i2s,
 
     case i2s.receive(size_t index, int32_t sample):
       unsafe {
+#ifdef MULTI_TONE_GEN
         if (synth_sinewave_channel_mask & (1 << index)) {
           p_in_frame->samples[index] = sinewave[sinewave_index];
         }
@@ -219,6 +220,19 @@ void buffer_manager_to_i2s(server i2s_callback_if i2s,
           if (sinewave_index == 256)
             sinewave_index = 0;
         }
+#else
+        if (synth_sinewave_channel_mask & (1 << index)) {
+          p_in_frame->samples[index] = sinewave[sinewave_index[index]];
+        }
+        else {
+          p_in_frame->samples[index] = sample;
+        }
+        if (synth_sinewave_channel_mask & (1 << index)) {
+            sinewave_index[index] = sinewave_index[index] + index + 1; // double the frequency for increasing index
+          if (sinewave_index[index] > 255)
+              sinewave_index[index] = 0;
+        }
+#endif
       }
       break;
 
@@ -456,7 +470,7 @@ int main(void)
                  clk_i2s_mclk);
     }
 
-    on tile[0]: [[distribute]] buffer_manager_to_i2s(i_i2s, c_audio, i_i2c[I2S_TO_I2C], c_sound_activity, 0xC,
+    on tile[0]: [[distribute]] buffer_manager_to_i2s(i_i2s, c_audio, i_i2c[I2S_TO_I2C], c_sound_activity, 0x3,
                                                      i_gpio[0], i_gpio[1], i_gpio[2], i_gpio[3]);
 
     on tile[0]: audio_buffer_manager(c_audio, i_audio_in_push, i_audio_out_pull, c_media_ctl[0], AUDIO_I2S_IO);
