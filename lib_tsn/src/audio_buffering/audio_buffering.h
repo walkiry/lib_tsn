@@ -31,7 +31,7 @@ struct input_finfo {
 };
 
 struct output_finfo {
-  unsigned int *unsafe p_buffer[AVB_NUM_MEDIA_OUTPUTS];
+  unsigned int *unsafe p_buffer[AVB_NUM_MEDIA_OUTPUTS+1]; // +1 for CRF
 };
 
 typedef int audio_output_fifo_t;

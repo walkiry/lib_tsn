@@ -16,7 +16,7 @@
 #include "audio_buffering.h"
 
 #ifndef MAX_INCOMING_AVB_STREAMS
-#define MAX_INCOMING_AVB_STREAMS (AVB_NUM_SINKS)
+#define MAX_INCOMING_AVB_STREAMS (AVB_NUM_SINKS+1) //+1 CRF Stream
 #endif
 
 #ifndef AVB_MAX_CHANNELS_PER_LISTENER_STREAM
@@ -33,17 +33,31 @@ typedef struct avb_1722_stream_info_t {
   short state;                     //!< Generic state info
   int chan_lock;                   //!< Counter for locking onto a data stream
   int rate;                        //!< The estimated rate of the audio traffic
-  int prev_num_samples;            //!< Number of samples in last received 1722 packet
+  int frames_per_packet;           //!< The number of frames per packet
   int num_channels_in_payload;     //!< The number of channels in the 1722 payloads
-  int num_channels;
-  int dbc;                         //!< The DBC of the last seen packet
+  int num_channels;                //!< The number of expected channels in the 1722 payload
   int last_sequence;               //!< The sequence number from the last 1722 packet
   audio_output_fifo_t map[AVB_MAX_CHANNELS_PER_LISTENER_STREAM];
 } avb_1722_stream_info_t;
 
-
 #ifdef __XC__
 int avb_1722_listener_process_packet(chanend? buf_ctl,
+                                     unsigned char Buf[],
+                                     int numBytes,
+                                     REFERENCE_PARAM(avb_1722_stream_info_t, stream_info),
+                                     NULLABLE_REFERENCE_PARAM(ptp_time_info_mod64, timeInfo),
+                                     int index,
+                                     REFERENCE_PARAM(int, notified_buf_ctl),
+                                     buffer_handle_t h);
+int avb_1722_listener_process_crf_packet(chanend? buf_ctl,
+                                     unsigned char Buf[],
+                                     int numBytes,
+                                     REFERENCE_PARAM(avb_1722_stream_info_t, stream_info),
+                                     NULLABLE_REFERENCE_PARAM(ptp_time_info_mod64, timeInfo),
+                                     int index,
+                                     REFERENCE_PARAM(int, notified_buf_ctl),
+                                     buffer_handle_t h);
+int avb_1722_listener_process_aaf_packet(chanend? buf_ctl,
                                      unsigned char Buf[],
                                      int numBytes,
                                      REFERENCE_PARAM(avb_1722_stream_info_t, stream_info),

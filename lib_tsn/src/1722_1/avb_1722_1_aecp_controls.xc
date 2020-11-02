@@ -14,17 +14,24 @@
 #include "aem_descriptor_types.h"
 #include "aem_descriptor_structs.h"
 
+static int getSamplesPerFrame(int rate)
+{
+    switch (rate)
+    {
+      case 48000:  return 0x0006;
+      case 96000:  return 0x000C;
+      case 192000: return 0x0018;
+      default:     return 0x0000;
+    }
+}
+
 static int sfc_from_sampling_rate(int rate)
 {
   switch (rate)
   {
-    case 32000: return 0;
-    case 44100: return 1;
-    case 48000: return 2;
-    case 88200: return 3;
-    case 96000: return 4;
-    case 176400: return 5;
-    case 192000: return 6;
+    case 48000:  return 0x05;
+    case 96000:  return 0x07;
+    case 192000: return 0x09;
     default: return 0;
   }
 }
@@ -33,27 +40,35 @@ static int sampling_rate_from_sfc(int sfc)
 {
   switch (sfc)
   {
-    case 0: return 32000;
-    case 1: return 44100;
-    case 2: return 48000;
-    case 3: return 88200;
-    case 4: return 96000;
-    case 5: return 176400;
-    case 6: return 192000;
+    case 0x05: return 48000;
+    case 0x07: return 96000;
+    case 0x09: return 192000;
     default: return 0;
   }
 }
 
 static unsafe void get_stream_format_field(avb_stream_info_t *unsafe stream_info, unsigned char stream_format[8])
 {
-  stream_format[0] = 0x00;
-  stream_format[1] = 0xa0;
-  stream_format[2] = sfc_from_sampling_rate(stream_info->rate); // 10.3.2 in 61883-6
-  stream_format[3] = stream_info->num_channels; // dbs
-  stream_format[4] = 0x40; // b[0], nb[1], reserved[2:]
-  stream_format[5] = 0; // label_iec_60958_cnt
-  stream_format[6] = stream_info->num_channels; // label_mbla_cnt
-  stream_format[7] = 0; // label_midi_cnt[0:3], label_smptecnt[4:]
+    /* This is the default format from our aem_descripts.h.in file
+     * 48 khz 8ch
+    0x02,                                       // v=0, subtype=AAF, res=0, ut=0,
+    0x05,                                       // nsr=48kHz,
+    0x02,                                       // format=INT32, bitdepth=32
+    0x20,
+    0x02,                                       // channels_per_frame=8, samples_per_frame=6, reserved = 0
+    0x00,
+    0x60,
+    0x00,
+    */
+  stream_format[0] = 0x02; // AAF
+  stream_format[1] = sfc_from_sampling_rate(stream_info->rate);
+  stream_format[2] = 0x02; // format=INT32, bitdepth=32
+  stream_format[3] = 0x20;
+  int samples_per_frame = getSamplesPerFrame(stream_info->rate);
+  stream_format[4] =   (stream_info->num_channels >> 2) & 0xff;
+  stream_format[5] = (((stream_info->num_channels << 6) & 0x3) | (samples_per_frame >> 4)) & 0xff;
+  stream_format[6] =   (samples_per_frame << 4) & 0xff;
+  stream_format[7] = 0x00;
 }
 
 unsafe void set_current_fields_in_descriptor(unsigned char *unsafe descriptor,
@@ -201,7 +216,7 @@ unsafe void process_aem_cmd_getset_stream_format(avb_1722_1_aecp_packet_t *unsaf
   avb_source_info_t source;
   avb_stream_info_t *unsafe stream;
 
-  if ((desc_type == AEM_STREAM_INPUT_TYPE) && (stream_index < AVB_NUM_SINKS))
+  if ((desc_type == AEM_STREAM_INPUT_TYPE) && (stream_index < AVB_NUM_SINKS+1)) //+1 CRF Stream
   {
     sink = i_avb._get_sink_info(stream_index);
     stream = &sink.stream;
@@ -223,9 +238,28 @@ unsafe void process_aem_cmd_getset_stream_format(avb_1722_1_aecp_packet_t *unsaf
   }
   else // AECP_AEM_CMD_SET_STREAM_FORMAT
   {
-    format = AVB_FORMAT_MBLA_24BIT;
-    rate = sampling_rate_from_sfc(cmd->stream_format[2]);
-    channels = cmd->stream_format[6];
+      // Hack uses fixed stream index. We should get this information from the 1722.1 packet!
+    if (stream_index == 0) {
+        format = AVB_FORMAT_AAF;
+        rate = sampling_rate_from_sfc(cmd->stream_format[1]);
+        channels = ((cmd->stream_format[4] << 2) | (cmd->stream_format[5] >> 6)) & 0x03ff;
+    }
+    if (stream_index == 1) {
+        format = AVB_FORMAT_CRF;
+        rate = 48000; //TODO fix for crf
+        channels = 1; // For CRF we use one empty channel in the audio buffer!
+    }
+
+    debug_printf("AECP_AEM_CMD_SET_STREAM_FORMAT: cmd[0...7] 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n",
+            cmd->stream_format[0],
+            cmd->stream_format[1],
+            cmd->stream_format[2],
+            cmd->stream_format[3],
+            cmd->stream_format[4],
+            cmd->stream_format[5],
+            cmd->stream_format[6],
+            cmd->stream_format[7]);
+    debug_printf("AECP_AEM_CMD_SET_STREAM_FORMAT: rate %d, channels %d\n", rate, channels);
 
     if (stream->state == AVB_SOURCE_STATE_ENABLED)
     {
@@ -233,7 +267,7 @@ unsafe void process_aem_cmd_getset_stream_format(avb_1722_1_aecp_packet_t *unsaf
       return;
     }
 
-    stream->num_channels = channels;
+    stream->num_channels = channels; //channels;
     stream->rate = rate;
     stream->format = format;
 
@@ -262,7 +296,7 @@ unsafe void process_aem_cmd_getset_stream_info(avb_1722_1_aecp_packet_t *unsafe 
   avb_sink_info_t sink;
   avb_source_info_t source;
 
-  if ((desc_type == AEM_STREAM_INPUT_TYPE) && (stream_index < AVB_NUM_SINKS))
+  if ((desc_type == AEM_STREAM_INPUT_TYPE) && (stream_index < AVB_NUM_SINKS+1)) //+1 CRF Stream
   {
     sink = i_avb._get_sink_info(stream_index);
     reservation = &sink.reservation;
@@ -347,6 +381,7 @@ unsafe void process_aem_cmd_getset_sampling_rate(avb_1722_1_aecp_packet_t *unsaf
     }
     else {
       status = AECP_AEM_STATUS_NO_SUCH_DESCRIPTOR;
+      debug_printf("AECP_AEM_CMD_GET_SAMPLING_RATE -> AECP_AEM_STATUS_NO_SUCH_DESCRIPTOR\n");
     }
   }
   else // AECP_AEM_CMD_SET_SAMPLING_RATE
@@ -361,6 +396,7 @@ unsafe void process_aem_cmd_getset_sampling_rate(avb_1722_1_aecp_packet_t *unsaf
     }
     else {
       status = AECP_AEM_STATUS_NO_SUCH_DESCRIPTOR;
+      debug_printf("AECP_AEM_CMD_SET_SAMPLING_RATE -> AECP_AEM_STATUS_NO_SUCH_DESCRIPTOR\n");
     }
   }
   return;
@@ -374,11 +410,13 @@ unsafe void process_aem_cmd_getset_clock_source(avb_1722_1_aecp_packet_t *unsafe
   avb_1722_1_aem_getset_clock_source_t *cmd = (avb_1722_1_aem_getset_clock_source_t *)(pkt->data.aem.command.payload);
   unsigned short media_clock_id = ntoh_16(cmd->descriptor_id);
   // The clock source descriptor's index corresponds to the clock type in our implementation
-  enum device_media_clock_type_t source_index;
+  enum device_media_clock_type_t clock_type;
+  int source_index;
 
   if (command_type == AECP_AEM_CMD_GET_CLOCK_SOURCE)
   {
-    if (avb.get_device_media_clock_type(media_clock_id, source_index))
+    //if (avb.get_device_media_clock_type(media_clock_id, clock_type))
+    if (avb.get_device_media_clock_source(media_clock_id, source_index))
     {
       hton_16(cmd->clock_source_index, source_index);
     }
@@ -390,8 +428,16 @@ unsafe void process_aem_cmd_getset_clock_source(avb_1722_1_aecp_packet_t *unsafe
   {
     source_index = ntoh_16(cmd->clock_source_index);
 
+    // TODO clean up
     avb.set_device_media_clock_state(media_clock_id, DEVICE_MEDIA_CLOCK_STATE_DISABLED);
-    if (avb.set_device_media_clock_type(media_clock_id, source_index))
+    if (source_index == 1)
+        avb.set_device_media_clock_source(media_clock_id, 8); //stream 1 maps to fifo 8! TODO We should use the mapping information here!!!
+    else
+        avb.set_device_media_clock_source(media_clock_id, source_index);
+    // TODO calculate media clock type properly
+    if(source_index < 2) clock_type = DEVICE_MEDIA_CLOCK_INPUT_STREAM_DERIVED;
+    else clock_type = DEVICE_MEDIA_CLOCK_LOCAL_CLOCK;
+    if (avb.set_device_media_clock_type(media_clock_id, clock_type))
     {
       avb.set_device_media_clock_state(media_clock_id, DEVICE_MEDIA_CLOCK_STATE_ENABLED);
       // Success

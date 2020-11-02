@@ -37,9 +37,9 @@ typedef struct media_info_t {
 static int max_talker_stream_id = 0;
 static int max_listener_stream_id = 0;
 static avb_source_info_t sources[AVB_NUM_SOURCES];
-static avb_sink_info_t sinks[AVB_NUM_SINKS];
+static avb_sink_info_t sinks[AVB_NUM_SINKS+1]; //+1 CRF Stream
 static media_info_t inputs[AVB_NUM_MEDIA_INPUTS];
-static media_info_t outputs[AVB_NUM_MEDIA_OUTPUTS];
+static media_info_t outputs[AVB_NUM_MEDIA_OUTPUTS+1]; // +1 for CRF
 
 static void register_talkers(chanend (&?c_talker_ctl)[], unsigned char mac_addr[6])
 {
@@ -68,6 +68,7 @@ static void register_talkers(chanend (&?c_talker_ctl)[], unsigned char mac_addr[
             AVB_SRP_TSPEC_RESERVED_VALUE);
         source->reservation.tspec_max_interval = AVB_SRP_MAX_INTERVAL_FRAMES_DEFAULT;
         source->reservation.accumulated_latency = AVB_SRP_ACCUMULATED_LATENCY_DEFAULT;
+        debug_printf("register_talkers: num_channels %d\n", source->stream.num_channels);
         max_talker_stream_id++;
       }
     }
@@ -94,6 +95,7 @@ static void register_listeners(chanend (&?c_listener_ctl)[])
         sink->stream.local_id = j;
         sink->stream.flags = 0;
         sink->reservation.vlan_id = 0;
+        debug_printf("register_listeners: num_channels %d\n", sink->stream.num_channels);
         max_listener_stream_id++;
       }
       c_listener_ctl[i] <: max_link_id;
@@ -145,7 +147,7 @@ static void init_media_clock_server(client interface media_clock_if
                                     media_clock_ctl)
 {
   if (!isnull(media_clock_ctl)) {
-    for (int i=0;i<AVB_NUM_MEDIA_OUTPUTS;i++) {
+    for (int i=0;i<AVB_NUM_MEDIA_OUTPUTS+1;i++) { // +1 for CRF
       media_clock_ctl.set_buf_fifo(i, outputs[i].fifo);
     }
   }
@@ -166,7 +168,7 @@ void avb_init(chanend c_media_ctl[],
 static int valid_to_leave_vlan(int vlan)
 {
   int all_streams_disabled = 1;
-  for (int i=0; i < AVB_NUM_SINKS; i++) {
+  for (int i=0; i < AVB_NUM_SINKS+1; i++) {//+1 CRF Stream
     if (sinks[i].stream.state != AVB_SINK_STATE_DISABLED) {
       all_streams_disabled = 0;
       break;
@@ -184,7 +186,7 @@ static int valid_to_leave_vlan(int vlan)
 }
 
 static void set_avb_sink_map(chanend c, avb_sink_info_t &sink, unsigned sink_num) {
-  debug_printf("Listener sink #%d chan map:\n", sink_num);
+  debug_printf("set_avb_sink_map: Listener sink #%d chan map (%d channels):\n", sink_num, sink.stream.num_channels);
   master {
     c <: AVB1722_ADJUST_LISTENER_STREAM;
     c <: (int)sink.stream.local_id;
@@ -215,7 +217,7 @@ static void update_sink_state(unsigned sink_num,
         state == AVB_SINK_STATE_POTENTIAL) {
 
       unsigned clk_ctl = outputs[sink->map[0]].clk_ctl;
-      debug_printf("Listener sink #%d chan map:\n", sink_num);
+      debug_printf("update_sink_state: Listener sink #%d chan map (%d channels):\n", sink_num, (int)sink->stream.num_channels);
       master {
         *c <: AVB1722_CONFIGURE_LISTENER_STREAM;
         *c <: (int)sink->stream.local_id;
@@ -329,9 +331,9 @@ static void configure_talker_stream(chanend c, avb_source_info_t *alias source, 
 
 static unsigned avb_srp_calculate_max_framesize(avb_source_info_t *source_info)
 {
-#if defined(AVB_1722_FORMAT_61883_6) || defined(AVB_1722_FORMAT_SAF)
+#if defined(AVB_1722_FORMAT_AAF)
   const unsigned samples_per_packet = (AVB_MAX_AUDIO_SAMPLE_RATE + (AVB1722_PACKET_RATE-1))/AVB1722_PACKET_RATE;
-  return AVB1722_PLUS_SIP_HEADER_SIZE + (source_info->stream.num_channels * samples_per_packet * 4);
+  return (source_info->stream.num_channels * samples_per_packet * 4);
 #endif
 #if defined(AVB_1722_FORMAT_61883_4)
   return AVB1722_PLUS_SIP_HEADER_SIZE + (192 * MAX_TS_PACKETS_PER_1722);
@@ -363,6 +365,7 @@ static void update_source_state(unsigned source_num,
       }
 
       // check that the map is ok
+      debug_printf("source->stream.num_channels %d\n", source->stream.num_channels);
       for (int i=0;i<source->stream.num_channels;i++) {
         if (inputs[source->map[i]].mapped_to != UNMAPPED) {
           valid = 0;
@@ -605,7 +608,7 @@ int set_avb_source_port(unsigned source_num,
 #ifdef MEDIA_OUTPUT_FIFO_VOLUME_CONTROL
 void set_avb_source_volumes(unsigned sink_num, int volumes[], int count)
 {
-	if (sink_num < AVB_NUM_SINKS) {
+	if (sink_num < AVB_NUM_SINKS+1) { //+1 CRF Stream
     unsafe {
       avb_sink_info_t *sink = &sinks[sink_num];
       chanend *unsafe c = sink->listener_ctl;
@@ -709,7 +712,7 @@ unsigned avb_get_source_stream_index_from_stream_id(unsigned int stream_id[2])
 
 unsigned avb_get_sink_stream_index_from_stream_id(unsigned int stream_id[2])
 {
-  for (unsigned i=0; i<AVB_NUM_SINKS; ++i) {
+  for (unsigned i=0; i<AVB_NUM_SINKS+1; ++i) {//+1 CRF Stream
     if (stream_id[0] == sinks[i].reservation.stream_id[0] &&
         stream_id[1] == sinks[i].reservation.stream_id[1]) {
       return i;
@@ -728,7 +731,7 @@ unsigned avb_get_source_stream_index_from_pointer(avb_source_info_t *unsafe p)
 
 unsigned avb_get_sink_stream_index_from_pointer(avb_sink_info_t *unsafe p)
 {
-	for (unsigned i=0; i<AVB_NUM_SINKS; ++i) {
+	for (unsigned i=0; i<AVB_NUM_SINKS+1; ++i) {//+1 CRF Stream
 		if (p == &sinks[i]) return i;
 	}
 	return -1u;

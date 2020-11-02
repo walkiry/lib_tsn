@@ -4,6 +4,10 @@
 
 /******** Endpoint audio and clocking parameters ************************************************/
 
+#define AEM_GENERATE_DESCRIPTORS_ON_FLY 0
+#define AVB_1722_1_AEM_ENABLED 1
+#define AVB_ENABLE_1722_1 1
+
 /* Talker configuration */
 
 /** The total number of AVB sources (streams that are to be transmitted). */
@@ -35,7 +39,7 @@
 #define AVB_MAX_CHANNELS_PER_LISTENER_STREAM 8
 
 /** Use 61883-6 audio format for 1722 streams */
-#define AVB_1722_FORMAT_61883_6 1
+#define AVB_1722_FORMAT_AAF 1
 
 /** The number of components in the endpoint that will register and initialize media FIFOs
     (typically an audio interface component such as I2S). */

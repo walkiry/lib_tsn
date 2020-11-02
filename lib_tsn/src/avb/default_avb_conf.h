@@ -46,8 +46,8 @@
 #define AVB_MAX_CHANNELS_PER_LISTENER_STREAM 8
 #endif
 
-#ifndef AVB_1722_FORMAT_61883_6
-#define AVB_1722_FORMAT_61883_6 1
+#ifndef AVB_1722_FORMAT_AAF
+#define AVB_1722_FORMAT_AAF 1
 #endif
 
 #ifndef AVB_NUM_MEDIA_UNITS
@@ -63,7 +63,7 @@
 #endif
 
 #ifndef AVB_ENABLE_1722_1
-#define AVB_ENABLE_1722_1 0
+#define AVB_ENABLE_1722_1 1
 #endif
 
 #ifndef AVB_ENABLE_1722_MAAP
@@ -76,6 +76,10 @@
 
 #ifndef FLASH_PAGE_SIZE
 #define FLASH_PAGE_SIZE (256)
+#endif
+
+#ifndef AVB_1722_FORMAT_CRF
+#define AVB_1722_FORMAT_CRF 1
 #endif
 
 #endif // __default_avb_conf_h__

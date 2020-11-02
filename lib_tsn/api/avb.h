@@ -17,6 +17,8 @@
 enum avb_stream_format_t
 {
   AVB_FORMAT_MBLA_24BIT, /*!< 24bit MBLA */
+  AVB_FORMAT_CRF, /*!< CRF */
+  AVB_FORMAT_AAF, /*!< 24bit MBLA */
 };
 
 
@@ -414,6 +416,7 @@ extends client interface avb_interface : {
     avb_source_info_t source;
     source = i._get_source_info(source_num);
     len = source.stream.num_channels;
+    debug_printf("source.stream.num_channels %d\n", source.stream.num_channels);
     memcpy(map, source.map, len<<2);
     return 1;
   }
@@ -437,6 +440,7 @@ extends client interface avb_interface : {
   static inline int set_source_map(client interface avb_interface i, unsigned source_num,
                      int map[len], unsigned len)
   {
+    debug_printf("set_source_map len %d\n", len);
     if (source_num >= AVB_NUM_SOURCES)
       return 0;
     avb_source_info_t source;
@@ -515,7 +519,7 @@ extends client interface avb_interface : {
   static inline int get_sink_id(client interface avb_interface i, unsigned sink_num,
                   unsigned int stream_id[2])
   {
-    if (sink_num >= AVB_NUM_SINKS)
+    if (sink_num >= AVB_NUM_SINKS+1) // +1 CRF Stream
       return 0;
     avb_sink_info_t sink;
     sink = i._get_sink_info(sink_num);
@@ -538,7 +542,7 @@ extends client interface avb_interface : {
   static inline int set_sink_id(client interface avb_interface i, unsigned sink_num,
                   unsigned int stream_id[2])
   {
-    if (sink_num >= AVB_NUM_SINKS)
+    if (sink_num >= AVB_NUM_SINKS+1) // +1 CRF Stream
       return 0;
     avb_sink_info_t sink;
     sink = i._get_sink_info(sink_num);
@@ -559,7 +563,7 @@ extends client interface avb_interface : {
   static inline int get_sink_format(client interface avb_interface i, unsigned sink_num,
                       enum avb_stream_format_t &format, int &rate)
   {
-    if (sink_num >= AVB_NUM_SINKS)
+    if (sink_num >= AVB_NUM_SINKS+1)// +1 CRF Stream
       return 0;
     avb_sink_info_t sink;
     sink = i._get_sink_info(sink_num);
@@ -585,7 +589,7 @@ extends client interface avb_interface : {
   static inline int set_sink_format(client interface avb_interface i, unsigned sink_num,
                       enum avb_stream_format_t format, int rate)
   {
-    if (sink_num >= AVB_NUM_SINKS)
+    if (sink_num >= AVB_NUM_SINKS+1)// +1 CRF Stream
       return 0;
     avb_sink_info_t sink;
     sink = i._get_sink_info(sink_num);
@@ -605,7 +609,7 @@ extends client interface avb_interface : {
   static inline int get_sink_channels(client interface avb_interface i, unsigned sink_num,
                         int &channels)
   {
-    if (sink_num >= AVB_NUM_SINKS)
+    if (sink_num >= AVB_NUM_SINKS+1)// +1 CRF Stream - but CRF has no channels
       return 0;
     avb_sink_info_t sink;
     sink = i._get_sink_info(sink_num);
@@ -627,7 +631,7 @@ extends client interface avb_interface : {
   static inline int set_sink_channels(client interface avb_interface i, unsigned sink_num,
                         int channels)
   {
-    if (sink_num >= AVB_NUM_SINKS)
+    if (sink_num >= AVB_NUM_SINKS+1)// +1 CRF Stream - but CRF has no channels
       return 0;
     avb_sink_info_t sink;
     sink = i._get_sink_info(sink_num);
@@ -646,7 +650,7 @@ extends client interface avb_interface : {
   static inline int get_sink_sync(client interface avb_interface i, unsigned sink_num,
                     int &sync)
   {
-    if (sink_num >= AVB_NUM_SINKS)
+    if (sink_num >= AVB_NUM_SINKS+1)//+1 CRF Stream
       return 0;
     avb_sink_info_t sink;
     sink = i._get_sink_info(sink_num);
@@ -665,7 +669,7 @@ extends client interface avb_interface : {
   static inline int set_sink_sync(client interface avb_interface i, unsigned sink_num,
                     int sync)
   {
-    if (sink_num >= AVB_NUM_SINKS)
+    if (sink_num >= AVB_NUM_SINKS+1)//+1 CRF Stream
       return 0;
     avb_sink_info_t sink;
     sink = i._get_sink_info(sink_num);
@@ -684,7 +688,7 @@ extends client interface avb_interface : {
   static inline int get_sink_vlan(client interface avb_interface i, unsigned sink_num,
                     int &vlan)
   {
-    if (sink_num >= AVB_NUM_SINKS)
+    if (sink_num >= AVB_NUM_SINKS+1)//+1 CRF Stream
       return 0;
     avb_sink_info_t sink;
     sink = i._get_sink_info(sink_num);
@@ -707,7 +711,7 @@ extends client interface avb_interface : {
   static inline int set_sink_vlan(client interface avb_interface i, unsigned sink_num,
                                   int vlan)
   {
-    if (sink_num >= AVB_NUM_SINKS)
+    if (sink_num >= AVB_NUM_SINKS+1)//+1 CRF Stream
       return 0;
     avb_sink_info_t sink;
     sink = i._get_sink_info(sink_num);
@@ -727,7 +731,7 @@ extends client interface avb_interface : {
   static inline int get_sink_addr(client interface avb_interface i, unsigned sink_num,
                     unsigned char addr[], int &len)
   {
-    if (sink_num >= AVB_NUM_SINKS)
+    if (sink_num >= AVB_NUM_SINKS+1)//+1 CRF Stream
       return 0;
     avb_sink_info_t sink;
     sink = i._get_sink_info(sink_num);
@@ -754,7 +758,7 @@ extends client interface avb_interface : {
   static inline int set_sink_addr(client interface avb_interface i, unsigned sink_num,
                     unsigned char addr[len], unsigned len)
   {
-    if (sink_num >= AVB_NUM_SINKS)
+    if (sink_num >= AVB_NUM_SINKS+1)//+1 CRF Stream
       return 0;
     avb_sink_info_t sink;
     sink = i._get_sink_info(sink_num);
@@ -775,7 +779,7 @@ extends client interface avb_interface : {
   static inline int get_sink_state(client interface avb_interface i, unsigned sink_num,
                      enum avb_sink_state_t &state)
   {
-    if (sink_num >= AVB_NUM_SINKS)
+    if (sink_num >= AVB_NUM_SINKS+1)//+1 CRF Stream
       return 0;
     avb_sink_info_t sink;
     sink = i._get_sink_info(sink_num);
@@ -797,7 +801,7 @@ extends client interface avb_interface : {
   static inline int set_sink_state(client interface avb_interface i, unsigned sink_num,
                      enum avb_sink_state_t state)
   {
-    if (sink_num >= AVB_NUM_SINKS)
+    if (sink_num >= AVB_NUM_SINKS+1)//+1 CRF Stream
       return 0;
     avb_sink_info_t sink;
     sink = i._get_sink_info(sink_num);
@@ -817,11 +821,12 @@ extends client interface avb_interface : {
   static inline int get_sink_map(client interface avb_interface i, unsigned sink_num,
                    int map[], int &len)
   {
-    if (sink_num >= AVB_NUM_SINKS)
+    if (sink_num >= AVB_NUM_SINKS+1)// +1 CRF Stream - but CRF has no channels
       return 0;
     avb_sink_info_t sink;
     sink = i._get_sink_info(sink_num);
     len = sink.stream.num_channels;
+    debug_printf("sink.stream.num_channels %d\n", sink.stream.num_channels);
     memcpy(map, sink.map, len<<2);
     return 1;
   }
@@ -842,7 +847,7 @@ extends client interface avb_interface : {
   static inline int set_sink_map(client interface avb_interface i, unsigned sink_num,
                    int map[len], unsigned len)
   {
-    if (sink_num >= AVB_NUM_SINKS)
+    if (sink_num >= AVB_NUM_SINKS+1)// +1 CRF Stream - but CRF has no channels
       return 0;
     avb_sink_info_t sink;
     sink = i._get_sink_info(sink_num);
@@ -964,6 +969,7 @@ extends client interface avb_interface : {
     media_clock_info_t info;
     info = i._get_media_clock_info(clock_num);
     info.source = source;
+    debug_printf("set_device_media_clock_source = %d clock_num %d\n", source, clock_num);
     i._set_media_clock_info(clock_num, info);
     return 1;
   }
@@ -1003,9 +1009,12 @@ extends client interface avb_interface : {
     media_clock_info_t info;
     info = i._get_media_clock_info(clock_num);
     info.clock_type = clock_type;
-    debug_printf("Setting clock source:");
-    if (info.clock_type) debug_printf(" LOCAL_CLOCK\n");
-    else debug_printf(" INPUT_STREAM_DERIVED\n");
+
+    // TODO Get Strings from Entity model
+    debug_printf("Setting clock type: ");
+    if (info.clock_type) debug_printf("Local Clock\n");
+    else debug_printf("Stream\n");
+
     i._set_media_clock_info(clock_num, info);
     return 1;
   }

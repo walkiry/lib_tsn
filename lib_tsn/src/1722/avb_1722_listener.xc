@@ -18,8 +18,9 @@
 
 #define TIMEINFO_UPDATE_INTERVAL 50000000
 
-#ifdef AVB_1722_FORMAT_61883_6
-#define MAX_PKT_BUF_SIZE_LISTENER (AVB_ETHERNET_HDR_SIZE + AVB_TP_HDR_SIZE + AVB_CIP_HDR_SIZE + AVB1722_LISTENER_MAX_NUM_SAMPLES_PER_CHANNEL * AVB_MAX_CHANNELS_PER_LISTENER_STREAM * 4 + 2)
+#ifdef AVB_1722_FORMAT_AAF
+// TODO Why do we need +2?
+#define MAX_PKT_BUF_SIZE_LISTENER (AVB_ETHERNET_HDR_SIZE + AVB_TP_HDR_SIZE + AVB1722_LISTENER_MAX_NUM_SAMPLES_PER_CHANNEL * AVB_MAX_CHANNELS_PER_LISTENER_STREAM * 4 + 2)
 #endif
 
 static transaction configure_stream(chanend c,
@@ -32,22 +33,22 @@ static transaction configure_stream(chanend c,
 	c :> s.rate;
 	c :> s.num_channels;
 
-	for(int i=0;i<s.num_channels;i++) {
-		c :> s.map[i];
-		if (s.map[i] >= 0)
-		{
-      unsafe {
-        enable_audio_output_fifo(h, s.map[i], media_clock);
-      }
-		}
+	//if (s.num_channels > 0)
+	{
+        for(int i=0;i<s.num_channels;i++) {
+            c :> s.map[i];
+            if (s.map[i] >= 0)
+            {
+              unsafe {
+                enable_audio_output_fifo(h, s.map[i], media_clock);
+              }
+            }
+        }
 	}
 
 	s.active = 1;
 	s.state = 0;
-	s.num_channels_in_payload = 0;
 	s.chan_lock = 0;
-	s.prev_num_samples = 0;
-	s.dbc = -1;
 }
 
 static transaction adjust_stream(chanend c,
@@ -62,12 +63,15 @@ static transaction adjust_stream(chanend c,
     int new_map[AVB_MAX_CHANNELS_PER_LISTENER_STREAM];
     int media_clock;
     c :> media_clock;
-    for(int i=0;i<s.num_channels;i++) {
-      c :> new_map[i];
-      if (new_map[i] != s.map[i])
-      {
-        s.map[i] = new_map[i];
-      }
+    //if(s.num_channels > 0)
+    {
+        for(int i=0;i<s.num_channels;i++) {
+          c :> new_map[i];
+          if (new_map[i] != s.map[i])
+          {
+            s.map[i] = new_map[i];
+          }
+        }
     }
     break;
   }
@@ -90,14 +94,17 @@ static transaction adjust_stream(chanend c,
 static void disable_stream(avb_1722_stream_info_t &s,
                            buffer_handle_t h)
 {
-	for(int i=0;i<s.num_channels;i++) {
-		if (s.map[i] >= 0)
-		{
-      unsafe {
-        disable_audio_output_fifo(h, s.map[i]);
-      }
-		}
-	}
+    //if(s.num_channels > 0)
+    {
+        for(int i=0;i<s.num_channels;i++) {
+            if (s.map[i] >= 0)
+            {
+          unsafe {
+            disable_audio_output_fifo(h, s.map[i]);
+          }
+            }
+        }
+    }
 
 	s.active = 0;
 	s.state = 0;
@@ -136,15 +143,32 @@ void avb_1722_listener_handle_packet(unsigned int rxbuf[],
   // process the audio packet if enabled.
   if (stream_id < MAX_AVB_STREAMS_PER_LISTENER &&
       st.listener_streams[stream_id].active) {
-    // process the current packet
-    avb_1722_listener_process_packet(c_buf_ctl,
-                                     &(rxbuf, unsigned char[])[2],
-                                     packet_info.len,
-                                     st.listener_streams[stream_id],
-                                     timeInfo,
-                                     stream_id,
-                                     st.notified_buf_ctl,
-                                     h);
+
+      //TODO figure out which stream_ids match which format!
+      if (stream_id == 0) { // TODO st.listener_streams[].type is what we should use here!
+          // process the current audio packet
+          avb_1722_listener_process_aaf_packet(c_buf_ctl,
+                                           &(rxbuf, unsigned char[])[2],
+                                           packet_info.len,
+                                           st.listener_streams[stream_id],
+                                           timeInfo,
+                                           stream_id,
+                                           st.notified_buf_ctl,
+                                           h);
+      } else if (stream_id == 1) {
+          // Hack to have a proper map for CRF Stream
+          st.listener_streams[stream_id].map[0]=0;
+          // process the current crf packet
+          avb_1722_listener_process_crf_packet(c_buf_ctl,
+                                             &(rxbuf, unsigned char[])[2],
+                                             packet_info.len,
+                                             st.listener_streams[stream_id],
+                                             timeInfo,
+                                             stream_id,
+                                             st.notified_buf_ctl,
+                                             h);
+      }
+
     st.counters.received_1722++;
   }
 }
@@ -210,22 +234,8 @@ void avb_1722_listener(streaming chanend c_eth_rx_hp,
   ethernet_packet_info_t packet_info;
   unsigned int rxbuf[(MAX_PKT_BUF_SIZE_LISTENER+3)/4];
 
-#if defined(AVB_1722_FORMAT_61883_4)
-  // Conditional due to compiler bug 11998.
-  unsigned t;
-  int pending_timeinfo = 0;
-  ptp_time_info_mod64 timeInfo;
-#endif
   set_thread_fast_mode_on();
   avb_1722_listener_init(c_listener_ctl, st, num_streams);
-
-#if defined(AVB_1722_FORMAT_61883_4)
-  // Conditional due to compiler bug 11998.
-  ptp_request_time_info_mod64(c_ptp);
-  ptp_get_requested_time_info_mod64(c_ptp, timeinfo);
-  tmr	:> t;
-  t+=TIMEINFO_UPDATE_INTERVAL;
-#endif
 
   buffer_handle_t h = audio_output_buf.get_handle();
 
@@ -234,18 +244,11 @@ void avb_1722_listener(streaming chanend c_eth_rx_hp,
 #pragma ordered
     select
       {
-#if !defined(AVB_1722_FORMAT_61883_4)
+#if defined(AVB_1722_FORMAT_AAF)
         // Conditional due to compiler bug 11998.
         // FIXME: stream_num variable is not the stream num, it is the FIFO!
       case c_buf_ctl :> int fifo_index:
           audio_output_fifo_handle_buf_ctl(c_buf_ctl, h, fifo_index, st.notified_buf_ctl, tmr);
-        break;
-#endif
-
-#if defined(AVB_1722_FORMAT_61883_4)
-        // The PTP server has sent new time information
-      case !isnull(c_ptp) => ptp_get_requested_time_info_mod64(c_ptp, timeInfo):
-        pending_timeinfo = 0;
         break;
 #endif
 
@@ -254,26 +257,9 @@ void avb_1722_listener(streaming chanend c_eth_rx_hp,
                                         packet_info,
                                         c_buf_ctl,
                                         st,
-                                        #ifdef AVB_1722_FORMAT_61883_4
-                                        timeInfo
-                                        #else
-                                        null
-                                        #endif
-                                        ,h);
+                                        null,
+                                        h);
         break;
-
-
-#if defined(AVB_1722_FORMAT_61883_4)
-        // Conditional due to compiler bug 11998
-        // Periodically ask the PTP server for new time information
-      case !isnull(c_ptp) => tmr when timerafter(t) :> t:
-        if (!pending_timeinfo) {
-          ptp_request_time_info_mod64(c_ptp);
-          pending_timeinfo = 1;
-        }
-        t+=TIMEINFO_UPDATE_INTERVAL;
-        break;
-#endif
 
       case avb_1722_listener_handle_cmd(c_listener_ctl, st, h):
         break;

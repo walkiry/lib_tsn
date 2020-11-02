@@ -86,9 +86,9 @@ void audio_input_sample_buffer(server push_if i_push, server pull_if i_pull)
 [[distributable]]
 void audio_output_sample_buffer(server push_if i_push, server pull_if i_pull)
 {
-  audio_output_fifo_data_t ofifo_data[AVB_NUM_MEDIA_OUTPUTS];
+  audio_output_fifo_data_t ofifo_data[AVB_NUM_MEDIA_OUTPUTS+1]; // +1 for CRF
   struct output_finfo inf;
-  init_audio_output_fifos(inf, ofifo_data, AVB_NUM_MEDIA_OUTPUTS);
+  init_audio_output_fifos(inf, ofifo_data, AVB_NUM_MEDIA_OUTPUTS+1); // +1 for CRF
 
   while (1) {
     select {
@@ -120,7 +120,7 @@ void audio_buffer_manager(streaming chanend c_audio,
     buffer_handle_t h_out = audio_output_buf.get_handle();
     audio_output_fifo_t *unsafe output_sample_buf = (audio_output_fifo_t *unsafe)((struct output_finfo *)h_out)->p_buffer;
     media_ctl_register(c_media_ctl, AVB_NUM_MEDIA_INPUTS,
-                      output_sample_buf, AVB_NUM_MEDIA_OUTPUTS, 0);
+                      output_sample_buf, AVB_NUM_MEDIA_OUTPUTS+1, 0); // +1 for CRF
     unsigned ctl_command;
     unsigned sample_rate;
 
@@ -177,10 +177,14 @@ void audio_buffer_manager(streaming chanend c_audio,
                                                                     timestamp);
                 }
                 c_audio <: (int32_t *unsafe)&sample_out_buf;
+
+                // Update timestamp for CRF
+                audio_output_fifo_pull_sample(h_out, AVB_NUM_MEDIA_OUTPUTS, timestamp);
               }
               else {
                 #pragma loop unroll
-                for (int i=0;i<AVB_NUM_SINKS;i++) { // FIXME: This should be number of TDM lines
+                for (int i=0;i<AVB_NUM_SINKS+1;i++) { // FIXME: This should be number of TDM lines
+                    // +1 for CRF
                   int index = channel + (i*8);
                   sample_out_buf[i] = audio_output_fifo_pull_sample(h_out, index,
                                                                     timestamp);
@@ -188,6 +192,9 @@ void audio_buffer_manager(streaming chanend c_audio,
                 c_audio <: (int32_t *unsafe)&sample_out_buf;
                 channel++;
                 if (channel == 8) channel = 0;
+
+                // Update timestamp for CRF
+                audio_output_fifo_pull_sample(h_out, AVB_NUM_MEDIA_OUTPUTS, timestamp);
               }
             }
             break;

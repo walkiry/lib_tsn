@@ -84,7 +84,7 @@ void inform_media_clocks_of_lock(int source_num)
 }
 
 #if (AVB_NUM_MEDIA_OUTPUTS != 0)
-static buf_info_t buf_info[AVB_NUM_MEDIA_OUTPUTS];
+static buf_info_t buf_info[AVB_NUM_MEDIA_OUTPUTS+1]; // +1 for CRF
 
 
 
@@ -96,9 +96,11 @@ static void init_buffers(void)
 int get_buf_info(int fifo)
 {
   int stream_num = -1;
-  for (int i=0;i<AVB_NUM_MEDIA_OUTPUTS;i++)
+  for (int i=0;i<AVB_NUM_MEDIA_OUTPUTS+1;i++) {// +1 for CRF
+    //debug_printf("%d %d %d\n", i, buf_info[i].fifo, fifo);
     if (buf_info[i].fifo == fifo)
       stream_num = i;
+  }
 
   return stream_num;
 }
@@ -142,6 +144,9 @@ static void manage_buffer(buf_info_t &b,
     buf_ctl :> wrptr;
     buf_ctl :> server_tile_id;
   }
+
+  //debug_printf("media clock server %d %d %d\n", presentation_timestamp, outgoing_timestamp_local, index);
+
   if (server_tile_id != get_local_tile_id())
   {
 	  outgoing_timestamp_local = outgoing_timestamp_local - (othercore_now - thiscore_now);
@@ -326,6 +331,8 @@ static void update_media_clocks(chanend ?ptp_svr, int clk_time)
                            CLOCK_RECOVERY_PERIOD);
 
       update_media_clock_divide(media_clocks[i]);
+    } else {
+        debug_printf("media clock %d is not active", i);
     }
   }
 }
@@ -353,7 +360,7 @@ void gptp_media_clock_server(server interface media_clock_if media_clock_ctl,
   unsigned char buf_ctl_cmd;
 #endif
   timer clk_timers[AVB_NUM_MEDIA_CLOCKS];
-  unsigned fifo_init_count = AVB_NUM_MEDIA_OUTPUTS;
+  unsigned fifo_init_count = AVB_NUM_MEDIA_OUTPUTS+1; // +1 for CRF
 
 
 #if COMBINE_MEDIA_CLOCK_AND_PTP
@@ -437,6 +444,7 @@ void gptp_media_clock_server(server interface media_clock_if media_clock_ctl,
 #endif
           (void) inct(buf_ctl[i]);
           buf_index = get_buf_info(fifo);
+          //debug_printf("get_buf_info buf_index %d fifo %d\n", buf_index, fifo);
           switch (buf_ctl_cmd)
             {
             case BUF_CTL_GOT_INFO:
@@ -461,6 +469,7 @@ void gptp_media_clock_server(server interface media_clock_if media_clock_ctl,
 
       case media_clock_ctl.set_buf_fifo(unsigned i, int fifo):
         buf_info[i].fifo = fifo;
+        debug_printf("set_buf_fifo i %d, fifo %d\n", i, fifo);
         fifo_init_count--;
         break;
       case media_clock_ctl.register_clock(unsigned i, unsigned clock_num):
